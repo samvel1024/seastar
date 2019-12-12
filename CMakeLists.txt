@@ -385,11 +385,15 @@ if (Seastar_DPDK)
   set (seastar_dpdk_obj seastar-dpdk.o)
 endif ()
 
+# ---------- Arrow/Parquet ----------------------
+include(FindPythonInterp)
 include(ExternalProject)
 set(ARROW_WITH_SNAPPY ON)
+set(ARROW_WITH_THRIFT ON)
 set(THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake/arrow_build)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ArrowBuild.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindThrift.cmake)
+# -----------------------------------------------
 
 add_library (seastar STATIC
   ${http_request_parser_file}
@@ -916,7 +920,8 @@ target_link_libraries (seastar
     protobuf::libprotobuf
     rt::rt
     yaml-cpp::yaml-cpp
-    Snappy::snappy)
+    Snappy::snappy
+    Thrift::thrift)
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "Sanitize"))
   set (Seastar_Sanitizers_OPTIONS ${Sanitizers_COMPILER_OPTIONS})

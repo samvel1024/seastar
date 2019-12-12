@@ -44,7 +44,7 @@ set(APACHE_MIRROR "")
 macro(get_apache_mirror)
     if(APACHE_MIRROR STREQUAL "")
         execute_process(COMMAND ${PYTHON_EXECUTABLE}
-                ${CMAKE_SOURCE_DIR}/build-support/get_apache_mirror.py
+                ${CMAKE_SOURCE_DIR}/cmake/get_apache_mirror.py
                 OUTPUT_VARIABLE APACHE_MIRROR
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
@@ -159,6 +159,7 @@ macro(build_dependency DEPENDENCY_NAME)
 endmacro()
 
 macro(resolve_dependency DEPENDENCY_NAME)
+    message("Checking ${DEPENDENCY_NAME} -> ${DEPENDENCY_NAME}_SOURCE")
     if(${DEPENDENCY_NAME}_SOURCE STREQUAL "AUTO")
         find_package(${DEPENDENCY_NAME} MODULE)
         if(NOT ${${DEPENDENCY_NAME}_FOUND})
@@ -200,11 +201,12 @@ if(ARROW_THRIFT OR ARROW_WITH_ZLIB)
     set(ARROW_WITH_ZLIB ON)
 endif()
 
-if(ARROW_HIVESERVER2 OR ARROW_PARQUET)
-    set(ARROW_WITH_THRIFT ON)
-else()
-    set(ARROW_WITH_THRIFT OFF)
-endif()
+#TODO [PQ] below code was blindly uncommented
+#if(ARROW_HIVESERVER2 OR ARROW_PARQUET)
+#    set(ARROW_WITH_THRIFT ON)
+#else()
+#    set(ARROW_WITH_THRIFT OFF)
+#endif()
 
 if(ARROW_FLIGHT)
     set(ARROW_WITH_GRPC ON)
@@ -369,11 +371,11 @@ else()
             "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz")
 endif()
 
-if(DEFINED ENV{ARROW_THRIFT_URL})
-    set(THRIFT_SOURCE_URL "$ENV{ARROW_THRIFT_URL}")
-else()
+#if(DEFINED ENV{ARROW_THRIFT_URL})
+#    set(THRIFT_SOURCE_URL "$ENV{ARROW_THRIFT_URL}")
+#else()
     set(THRIFT_SOURCE_URL "FROM-APACHE-MIRROR")
-endif()
+#endif()
 
 if(DEFINED ENV{ARROW_ZLIB_URL})
     set(ZLIB_SOURCE_URL "$ENV{ARROW_ZLIB_URL}")
@@ -983,7 +985,7 @@ macro(build_thrift)
             set(THRIFT_CMAKE_ARGS ${THRIFT_CMAKE_ARGS} "-DWITH_MT=OFF")
         endif()
     endif()
-    if(${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
+    if("${UPPERCASE_BUILD_TYPE}" STREQUAL "DEBUG")
         set(THRIFT_STATIC_LIB_NAME "${THRIFT_STATIC_LIB_NAME}d")
     endif()
     set(THRIFT_STATIC_LIB
@@ -1053,6 +1055,7 @@ macro(build_thrift)
                 "${APACHE_MIRROR}/thrift/${THRIFT_VERSION}/thrift-${THRIFT_VERSION}.tar.gz")
     endif()
 
+
     message("Downloading Apache Thrift from ${THRIFT_SOURCE_URL}")
 
     externalproject_add(thrift_ep
@@ -1073,7 +1076,8 @@ macro(build_thrift)
 endmacro()
 
 if(ARROW_WITH_THRIFT)
-    resolve_dependency(Thrift)
+    build_thrift()
+#    resolve_dependency(Thrift)
     # TODO: Don't use global includes but rather target_include_directories
     include_directories(SYSTEM ${THRIFT_INCLUDE_DIR})
 
