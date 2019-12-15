@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/util/string_builder.h"
+#include <seastar/parquet/arrow/util/string_builder.h>
 
 #include <sstream>
 

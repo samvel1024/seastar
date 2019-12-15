@@ -21,11 +21,11 @@
 #include <memory>
 #include <vector>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/compute/kernel.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace compute {

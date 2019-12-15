@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace compute {

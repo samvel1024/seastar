@@ -22,8 +22,8 @@
 #include <memory>
 #include <numeric>
 
-#include "parquet/arrow/compare.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/compare.h>
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

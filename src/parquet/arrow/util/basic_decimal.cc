@@ -27,10 +27,10 @@
 #include <limits>
 #include <string>
 
-#include "parquet/arrow/util/bit_util.h"
+#include <seastar/parquet/arrow/util/bit_util.h>
 #include "parquet/arrow/util/int_util.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
 
 namespace arrow {
 

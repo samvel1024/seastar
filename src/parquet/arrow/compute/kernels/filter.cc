@@ -22,13 +22,13 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array/concatenate.h"
+#include <seastar/parquet/arrow/array/concatenate.h>
 #include "parquet/arrow/builder.h"
 #include "parquet/arrow/compute/kernels/take_internal.h"
-#include "parquet/arrow/record_batch.h"
-#include "parquet/arrow/result.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/record_batch.h>
+#include <seastar/parquet/arrow/result.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 namespace compute {

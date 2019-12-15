@@ -27,8 +27,8 @@
 #ifndef ARROW_UTIL_BPACKING_H
 #define ARROW_UTIL_BPACKING_H
 
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/ubsan.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/ubsan.h>
 
 namespace arrow {
 namespace internal {

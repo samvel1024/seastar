@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/io/interfaces.h"
+#include <seastar/parquet/arrow/io/interfaces.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -25,13 +25,13 @@
 #include <typeinfo>
 #include <utility>
 
-#include "parquet/arrow/buffer.h"
-#include "parquet/arrow/io/concurrency.h"
+#include <seastar/parquet/arrow/buffer.h>
+#include <seastar/parquet/arrow/io/concurrency.h>
 #include "parquet/arrow/io/util_internal.h"
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 #include "parquet/arrow/util/iterator.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/string_view.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/string_view.h>
 
 namespace arrow {
 namespace io {

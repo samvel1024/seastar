@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "parquet/arrow/util/io_util.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 namespace internal {

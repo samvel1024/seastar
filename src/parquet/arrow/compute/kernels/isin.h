@@ -19,12 +19,12 @@
 
 #include <memory>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/compute/context.h"
 #include "parquet/arrow/compute/kernel.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace compute {

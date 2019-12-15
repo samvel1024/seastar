@@ -15,20 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/io/memory.h"
+#include <seastar/parquet/arrow/io/memory.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
 
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/io/util_internal.h"
-#include "parquet/arrow/memory_pool.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/memory.h"
+#include <seastar/parquet/arrow/memory_pool.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/memory.h>
 
 namespace arrow {
 namespace io {

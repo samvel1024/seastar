@@ -28,8 +28,8 @@
 #include "parquet/arrow/array/builder_primitive.h"  // IWYU pragma: export
 #include "parquet/arrow/array/builder_time.h"       // IWYU pragma: export
 #include "parquet/arrow/array/builder_union.h"      // IWYU pragma: export
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

@@ -21,9 +21,9 @@
 #include <cstdint>
 #include <memory>
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/compression.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/compression.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace util {

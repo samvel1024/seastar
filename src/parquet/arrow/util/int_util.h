@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace internal {

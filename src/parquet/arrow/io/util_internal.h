@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "parquet/arrow/io/interfaces.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/io/interfaces.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace io {

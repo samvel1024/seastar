@@ -28,14 +28,14 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/result.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_fwd.h"
-#include "parquet/arrow/type_traits.h"
+#include <seastar/parquet/arrow/result.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_fwd.h>
+#include <seastar/parquet/arrow/type_traits.h>
 #include "parquet/arrow/util/decimal.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/string_view.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/string_view.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

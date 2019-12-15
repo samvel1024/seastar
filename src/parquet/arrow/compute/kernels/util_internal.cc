@@ -23,12 +23,12 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/table.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/table.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 #include "parquet/arrow/compute/context.h"
 #include "parquet/arrow/compute/kernel.h"

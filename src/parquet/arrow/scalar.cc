@@ -21,14 +21,14 @@
 #include <string>
 #include <utility>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/buffer.h"
-#include "parquet/arrow/compare.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/buffer.h>
+#include <seastar/parquet/arrow/compare.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/decimal.h"
 #include "parquet/arrow/util/formatting.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/util/parsing.h"
 #include "parquet/arrow/visitor_inline.h"
 

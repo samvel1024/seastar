@@ -28,21 +28,21 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/array/dict_internal.h"
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/builder.h"
 #include "parquet/arrow/compute/context.h"
 #include "parquet/arrow/compute/kernel.h"
 #include "parquet/arrow/compute/kernels/util_internal.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/hashing.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/string_view.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/string_view.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

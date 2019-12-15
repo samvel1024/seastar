@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/parquet/encryption_internal.h"
+#include <seastar/parquet/parquet/encryption_internal.h>
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#include "parquet/parquet/exception.h"
+#include <seastar/parquet/parquet/exception.h>
 
 using parquet::ParquetException;
 

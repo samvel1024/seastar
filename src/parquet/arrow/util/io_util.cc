@@ -22,7 +22,7 @@
 
 #define _FILE_OFFSET_BITS 64
 
-#include "parquet/arrow/util/windows_compatibility.h"  // IWYU pragma: keep
+#include <seastar/parquet/arrow/util/windows_compatibility.h>  // IWYU pragma: keep
 
 #include <algorithm>
 #include <cerrno>
@@ -84,9 +84,9 @@
 
 #endif
 
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/util/io_util.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
 // For filename conversion
 #if defined(_WIN32)

@@ -21,14 +21,14 @@
 
 #include <memory>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/array/builder_base.h"
 #include "parquet/arrow/array/builder_binary.h"
 #include "parquet/arrow/array/builder_primitive.h"
 #include "parquet/arrow/buffer_builder.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/macros.h>
 
 namespace arrow {
 

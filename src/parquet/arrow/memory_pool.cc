@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/memory_pool.h"
+#include <seastar/parquet/arrow/memory_pool.h>
 
 #include <algorithm>  // IWYU pragma: keep
 #include <cstdlib>    // IWYU pragma: keep
@@ -24,8 +24,8 @@
 #include <limits>
 #include <memory>
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/logging.h"  // IWYU pragma: keep
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/logging.h>  // IWYU pragma: keep
 
 #ifdef ARROW_JEMALLOC
 // Needed to support jemalloc 3 and 4

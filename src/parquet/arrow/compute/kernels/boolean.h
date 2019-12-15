@@ -18,8 +18,8 @@
 #ifndef ARROW_COMPUTE_KERNELS_BOOLEAN_H
 #define ARROW_COMPUTE_KERNELS_BOOLEAN_H
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace compute {

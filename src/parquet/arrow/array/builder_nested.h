@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/array/builder_base.h"
 #include "parquet/arrow/buffer_builder.h"
 

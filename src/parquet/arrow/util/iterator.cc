@@ -23,7 +23,7 @@
 #include <mutex>
 #include <thread>
 
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 namespace detail {

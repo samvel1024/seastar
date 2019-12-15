@@ -26,16 +26,16 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/builder.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/formatting.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
 #include "parquet/arrow/util/parsing.h"  // IWYU pragma: keep
 #include "parquet/arrow/util/utf8.h"
 #include "parquet/arrow/visitor_inline.h"
@@ -1215,7 +1215,7 @@ class CastKernel : public CastKernelBase {
     return nullptr;                                                     \
   }
 
-#include "generated/cast_codegen_internal.h"  // NOLINT
+#include "parquet/generated/cast_codegen_internal.h"  // NOLINT
 
 GET_CAST_FUNCTION(BOOLEAN_CASES, BooleanType)
 GET_CAST_FUNCTION(UINT8_CASES, UInt8Type)

@@ -27,12 +27,12 @@
 #include <sstream>
 #include <string>
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/bit_util.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
 #include "parquet/arrow/util/decimal.h"
 #include "parquet/arrow/util/int_util.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
 #include "parquet/arrow/util/parsing.h"
 
 namespace arrow {

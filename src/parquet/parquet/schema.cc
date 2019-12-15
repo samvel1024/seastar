@@ -1,4 +1,4 @@
-  // Licensed to the Apache Software Foundation (ASF) under one
+// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/parquet/schema.h"
+#include <seastar/parquet/parquet/schema.h>
 
 #include <algorithm>
 #include <cstring>
@@ -24,11 +24,11 @@
 #include <type_traits>
 #include <utility>
 
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
-#include "parquet/parquet/exception.h"
+#include <seastar/parquet/parquet/exception.h>
 #include "parquet/parquet/schema_internal.h"
-#include "parquet/parquet/thrift_internal.h"
+#include <seastar/parquet/parquet/thrift_internal.h>
 
 using parquet::format::SchemaElement;
 

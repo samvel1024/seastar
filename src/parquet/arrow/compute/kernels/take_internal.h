@@ -26,10 +26,10 @@
 
 #include "parquet/arrow/builder.h"
 #include "parquet/arrow/compute/context.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

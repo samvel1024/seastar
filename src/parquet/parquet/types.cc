@@ -21,13 +21,13 @@
 #include <sstream>
 #include <string>
 
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/compression.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/compression.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
-#include "parquet/parquet/exception.h"
-#include "parquet/parquet/parquet_types.h"
-#include "parquet/parquet/types.h"
+#include <seastar/parquet/parquet/exception.h>
+#include <seastar/parquet/parquet/parquet_types.h>
+#include <seastar/parquet/parquet/types.h>
 
 using ::arrow::internal::checked_cast;
 using arrow::util::Codec;

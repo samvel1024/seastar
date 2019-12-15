@@ -20,8 +20,8 @@
 #include "parquet/arrow/compute/context.h"
 #include "parquet/arrow/compute/kernel.h"
 #include "parquet/arrow/compute/kernels/util_internal.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 

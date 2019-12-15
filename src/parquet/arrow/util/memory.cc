@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "parquet/arrow/util/memory.h"
+#include <seastar/parquet/arrow/util/memory.h>
 #include "parquet/arrow/util/thread_pool.h"
 
 namespace arrow {

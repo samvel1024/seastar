@@ -22,9 +22,9 @@
 
 #include <snappy.h>
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
 
 using std::size_t;
 

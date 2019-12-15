@@ -22,9 +22,9 @@
 #include <memory>
 #include <vector>
 
-#include "parquet/parquet/exception.h"
-#include "parquet/parquet/platform.h"
-#include "parquet/parquet/types.h"
+#include <seastar/parquet/parquet/exception.h>
+#include <seastar/parquet/parquet/platform.h>
+#include <seastar/parquet/parquet/types.h>
 
 namespace arrow {
 

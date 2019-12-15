@@ -25,7 +25,7 @@
 #include "parquet/arrow/compute/context.h"
 #include "parquet/arrow/compute/expression.h"
 #include "parquet/arrow/compute/logical_type.h"
-#include "parquet/arrow/type_traits.h"
+#include <seastar/parquet/arrow/type_traits.h>
 
 namespace arrow {
 

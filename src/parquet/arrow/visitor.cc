@@ -15,15 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/visitor.h"
+#include <seastar/parquet/arrow/visitor.h>
 
 #include <memory>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/extension_type.h"
 #include "parquet/arrow/scalar.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type.h>
 
 namespace arrow {
 

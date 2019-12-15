@@ -20,10 +20,10 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array/concatenate.h"
+#include <seastar/parquet/arrow/array/concatenate.h>
 #include "parquet/arrow/compute/kernels/take.h"
 #include "parquet/arrow/compute/kernels/take_internal.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

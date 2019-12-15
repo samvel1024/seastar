@@ -21,9 +21,9 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/hashing.h"
 #include "parquet/arrow/visitor_inline.h"
 

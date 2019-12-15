@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-#include "parquet/arrow/util/bit_util.h"
+#include <seastar/parquet/arrow/util/bit_util.h>
 
 namespace arrow {
 namespace internal {

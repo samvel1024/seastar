@@ -20,8 +20,8 @@
 #include <limits>
 #include <utility>
 
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 

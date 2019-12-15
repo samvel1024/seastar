@@ -21,10 +21,10 @@
 #include <cstdint>
 #include <memory>
 
-#include "parquet/arrow/memory_pool.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/memory_pool.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

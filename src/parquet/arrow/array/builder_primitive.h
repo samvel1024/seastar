@@ -21,9 +21,9 @@
 #include <memory>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/array/builder_base.h"
-#include "parquet/arrow/type.h"
+#include <seastar/parquet/arrow/type.h>
 
 namespace arrow {
 

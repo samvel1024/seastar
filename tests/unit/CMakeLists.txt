@@ -394,6 +394,18 @@ seastar_add_test (uname
   KIND BOOST
   SOURCES uname_test.cc)
 
+find_package(GTest REQUIRED)
+seastar_add_test(parquet_column_writer_test
+  SOURCES
+        parquet/gtest_util.h
+        parquet/random.h
+        parquet/util.h
+        parquet/util.cc
+        parquet/gtest_util.cc
+        parquet/random.cc
+        parquet/parquet_column_writer_test.cc
+  LIBRARIES GTest)
+
 set (tls_certificate_files
   catest.key
   catest.pem

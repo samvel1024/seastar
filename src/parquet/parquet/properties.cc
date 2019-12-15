@@ -18,10 +18,10 @@
 #include <sstream>
 #include <utility>
 
-#include "parquet/parquet/properties.h"
+#include <seastar/parquet/parquet/properties.h>
 
-#include "parquet/arrow/io/buffered.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/io/buffered.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace parquet {
 

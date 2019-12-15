@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -25,21 +25,21 @@
 #include <type_traits>
 #include <utility>
 
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/buffer_builder.h"
-#include "parquet/arrow/compare.h"
+#include <seastar/parquet/arrow/compare.h>
 #include "parquet/arrow/extension_type.h"
 #include "parquet/arrow/pretty_print.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
 #include "parquet/arrow/util/atomic_shared_ptr.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/decimal.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/visitor.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/visitor.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

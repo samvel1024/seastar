@@ -16,8 +16,8 @@
 // under the License.
 
 #include <boost/iterator/counting_iterator.hpp>
-#include "parquet/parquet/column_writer.h"
-#include "parquet/parquet/io.h"
+#include <seastar/parquet/parquet/column_writer.h>
+#include <seastar/parquet/parquet/io.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -27,28 +27,28 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/buffer_builder.h"
 #include "parquet/arrow/compute/api.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
 #include "parquet/arrow/util/bit_stream_utils.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/compression.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/compression.h>
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/util/rle_encoding.h"
 
 #include "parquet/parquet/column_page.h"
 #include "parquet/parquet/encoding.h"
-#include "parquet/parquet/encryption_internal.h"
-#include "parquet/parquet/internal_file_encryptor.h"
-#include "parquet/parquet/metadata.h"
-#include "parquet/parquet/platform.h"
-#include "parquet/parquet/properties.h"
-#include "parquet/parquet/schema.h"
-#include "parquet/parquet/statistics.h"
-#include "parquet/parquet/thrift_internal.h"
-#include "parquet/parquet/types.h"
+#include <seastar/parquet/parquet/encryption_internal.h>
+#include <seastar/parquet/parquet/internal_file_encryptor.h>
+#include <seastar/parquet/parquet/metadata.h>
+#include <seastar/parquet/parquet/platform.h>
+#include <seastar/parquet/parquet/properties.h>
+#include <seastar/parquet/parquet/schema.h>
+#include <seastar/parquet/parquet/statistics.h>
+#include <seastar/parquet/parquet/thrift_internal.h>
+#include <seastar/parquet/parquet/types.h>
 
 namespace parquet {
 

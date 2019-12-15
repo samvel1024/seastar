@@ -24,7 +24,7 @@
 #include "parquet/arrow/array/builder_base.h"       // IWYU pragma: export
 #include "parquet/arrow/array/builder_primitive.h"  // IWYU pragma: export
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 
 namespace arrow {
 

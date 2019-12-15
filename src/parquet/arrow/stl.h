@@ -30,13 +30,13 @@
 
 #include "parquet/arrow/builder.h"
 #include "parquet/arrow/compute/api.h"
-#include "parquet/arrow/memory_pool.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/table.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/memory_pool.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/table.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/macros.h>
 
 namespace arrow {
 

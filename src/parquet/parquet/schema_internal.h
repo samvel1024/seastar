@@ -27,9 +27,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "parquet/parquet/platform.h"
-#include "parquet/parquet/schema.h"
-#include "parquet/parquet/types.h"
+#include <seastar/parquet/parquet/platform.h>
+#include <seastar/parquet/parquet/schema.h>
+#include <seastar/parquet/parquet/types.h>
 
 namespace parquet {
 

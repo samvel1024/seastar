@@ -27,9 +27,9 @@
 #include <string>
 #include <type_traits>
 
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/config.h"
 #include "parquet/arrow/vendored/datetime.h"
 

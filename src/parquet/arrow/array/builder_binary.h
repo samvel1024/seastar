@@ -25,13 +25,13 @@
 #include <string>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/array/builder_base.h"
 #include "parquet/arrow/buffer_builder.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/string_view.h"  // IWYU pragma: export
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/string_view.h>  // IWYU pragma: export
 
 namespace arrow {
 

@@ -390,6 +390,7 @@ include(FindPythonInterp)
 include(ExternalProject)
 set(ARROW_WITH_SNAPPY ON)
 set(ARROW_WITH_THRIFT ON)
+#set(ARROW_WITH_RAPIDJSON ON)
 set(THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake/arrow_build)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ArrowBuild.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindThrift.cmake)
@@ -402,232 +403,240 @@ add_library (seastar STATIC
 
 
   #TODO [PQ] Merge with above list
-  src/parquet/arrow/type.h
-  src/parquet/arrow/array.cc
-  src/parquet/arrow/table.cc
-  src/parquet/arrow/memory_pool.h
-  src/parquet/arrow/status.cc
-  src/parquet/arrow/status.h
-  src/parquet/arrow/visitor_inline.h
-  src/parquet/arrow/util/formatting.h
-  src/parquet/arrow/util/bit_stream_utils.h
-  src/parquet/arrow/util/range.h
-  src/parquet/arrow/util/string.cc
-  src/parquet/arrow/util/make_unique.h
-  src/parquet/arrow/util/checked_cast.h
-  src/parquet/arrow/util/io_util.cc
-  src/parquet/arrow/util/string_builder.h
-  src/parquet/arrow/util/cpu_info.cc
-  src/parquet/arrow/util/io_util.h
-  src/parquet/arrow/util/ubsan.h
-  src/parquet/arrow/util/iterator.cc
-  src/parquet/arrow/util/int_util.h
-  src/parquet/arrow/util/double_conversion.h
-  src/parquet/arrow/util/atomic_shared_ptr.h
-  src/parquet/arrow/util/bpacking.h
-  src/parquet/arrow/util/decimal.h
-  src/parquet/arrow/util/logging.h
-  src/parquet/arrow/util/compression.h
-  src/parquet/arrow/util/functional.h
-  src/parquet/arrow/util/stl.h
-  src/parquet/arrow/util/thread_pool.h
-  src/parquet/arrow/util/compression.cc
-  src/parquet/arrow/util/bit_util.cc
-  src/parquet/arrow/util/key_value_metadata.h
-  src/parquet/arrow/util/compare.h
-  src/parquet/arrow/util/thread_pool.cc
-  src/parquet/arrow/util/utf8.cc
-  src/parquet/arrow/util/parsing.h
-  src/parquet/arrow/util/macros.h
-  src/parquet/arrow/util/formatting.cc
-  src/parquet/arrow/util/decimal.cc
-  src/parquet/arrow/util/string_builder.cc
-  src/parquet/arrow/util/compression_snappy.h
-  src/parquet/arrow/util/basic_decimal.cc
-  src/parquet/arrow/util/memory.h
-  src/parquet/arrow/util/compression_snappy.cc
-  src/parquet/arrow/util/hashing.h
-  src/parquet/arrow/util/cpu_info.h
-  src/parquet/arrow/util/int_util.cc
-  src/parquet/arrow/util/basic_decimal.h
-  src/parquet/arrow/util/bit_util.h
-  src/parquet/arrow/util/logging.cc
-  src/parquet/arrow/util/visibility.h
-  src/parquet/arrow/util/type_traits.h
-  src/parquet/arrow/util/key_value_metadata.cc
-  src/parquet/arrow/util/rle_encoding.h
-  src/parquet/arrow/util/windows_compatibility.h
-  src/parquet/arrow/util/iterator.h
-  src/parquet/arrow/util/memory.cc
-  src/parquet/arrow/util/utf8.h
-  src/parquet/arrow/util/string_view.h
-  src/parquet/arrow/util/align_util.h
-  src/parquet/arrow/util/string.h
-  src/parquet/arrow/util/config.h
-  src/parquet/arrow/util/variant.h
-  src/parquet/arrow/util/parsing.cc
-  src/parquet/arrow/compare.cc
-  src/parquet/arrow/array/dict_internal.cc
-  src/parquet/arrow/array/builder_binary.cc
-  src/parquet/arrow/array/builder_dict.h
-  src/parquet/arrow/array/builder_adaptive.h
-  src/parquet/arrow/array/builder_base.h
-  src/parquet/arrow/array/builder_primitive.cc
-  src/parquet/arrow/array/builder_binary.h
-  src/parquet/arrow/array/builder_decimal.cc
-  src/parquet/arrow/array/builder_union.h
-  src/parquet/arrow/array/diff.cc
-  src/parquet/arrow/array/concatenate.h
-  src/parquet/arrow/array/builder_dict.cc
-  src/parquet/arrow/array/builder_union.cc
-  src/parquet/arrow/array/diff.h
-  src/parquet/arrow/array/builder_nested.h
-  src/parquet/arrow/array/builder_base.cc
-  src/parquet/arrow/array/builder_time.h
-  src/parquet/arrow/array/builder_decimal.h
-  src/parquet/arrow/array/builder_adaptive.cc
-  src/parquet/arrow/array/dict_internal.h
-  src/parquet/arrow/array/concatenate.cc
-  src/parquet/arrow/array/builder_primitive.h
-  src/parquet/arrow/array/builder_nested.cc
-  src/parquet/arrow/type_fwd.h
-  src/parquet/arrow/visitor.cc
-  src/parquet/arrow/tensor.cc
-  src/parquet/arrow/builder.cc
-  src/parquet/arrow/io/interfaces.h
-  src/parquet/arrow/io/buffered.h
-  src/parquet/arrow/io/concurrency.h
-  src/parquet/arrow/io/mman.h
-  src/parquet/arrow/io/util_internal.h
-  src/parquet/arrow/io/memory.h
-  src/parquet/arrow/io/buffered.cc
-  src/parquet/arrow/io/interfaces.cc
-  src/parquet/arrow/io/memory.cc
-  src/parquet/arrow/result.cc
-  src/parquet/arrow/result.h
-  src/parquet/arrow/record_batch.h
-  src/parquet/arrow/sparse_tensor.h
-  src/parquet/arrow/scalar.h
-  src/parquet/arrow/sparse_tensor.cc
-  src/parquet/arrow/buffer.cc
-  src/parquet/arrow/visitor.h
-  src/parquet/arrow/stl.h
-  src/parquet/arrow/scalar.cc
-  src/parquet/arrow/buffer.h
-  src/parquet/arrow/memory_pool.cc
-  src/parquet/arrow/pretty_print.cc
-  src/parquet/arrow/compare.h
-  src/parquet/arrow/buffer_builder.h
-  src/parquet/arrow/compute/kernels/generated/cast_codegen_internal.h
-  src/parquet/arrow/compute/kernels/take.h
-  src/parquet/arrow/compute/kernels/sum.cc
-  src/parquet/arrow/compute/kernels/sort_to_indices.cc
-  src/parquet/arrow/compute/kernels/count.cc
-  src/parquet/arrow/compute/kernels/count.h
-  src/parquet/arrow/compute/kernels/compare.cc
-  src/parquet/arrow/compute/kernels/hash.cc
-  src/parquet/arrow/compute/kernels/mean.cc
-  src/parquet/arrow/compute/kernels/isin.cc
-  src/parquet/arrow/compute/kernels/take_internal.h
-  src/parquet/arrow/compute/kernels/filter.cc
-  src/parquet/arrow/compute/kernels/take.cc
-  src/parquet/arrow/compute/kernels/aggregate.h
-  src/parquet/arrow/compute/kernels/boolean.h
-  src/parquet/arrow/compute/kernels/sum.h
-  src/parquet/arrow/compute/kernels/compare.h
-  src/parquet/arrow/compute/kernels/util_internal.h
-  src/parquet/arrow/compute/kernels/cast.h
-  src/parquet/arrow/compute/kernels/mean.h
-  src/parquet/arrow/compute/kernels/util_internal.cc
-  src/parquet/arrow/compute/kernels/boolean.cc
-  src/parquet/arrow/compute/kernels/isin.h
-  src/parquet/arrow/compute/kernels/cast.cc
-  src/parquet/arrow/compute/kernels/aggregate.cc
-  src/parquet/arrow/compute/kernels/sum_internal.h
-  src/parquet/arrow/compute/kernels/filter.h
-  src/parquet/arrow/compute/kernels/sort_to_indices.h
-  src/parquet/arrow/compute/kernels/hash.h
-  src/parquet/arrow/compute/expression.cc
-  src/parquet/arrow/compute/type_fwd.h
-  src/parquet/arrow/compute/context.cc
-  src/parquet/arrow/compute/context.h
-  src/parquet/arrow/compute/api.h
-  src/parquet/arrow/compute/expression.h
-  src/parquet/arrow/compute/logical_type.cc
-  src/parquet/arrow/compute/operation.cc
-  src/parquet/arrow/compute/kernel.h
-  src/parquet/arrow/compute/operation.h
-  src/parquet/arrow/compute/logical_type.h
-  src/parquet/arrow/type.cc
-  src/parquet/arrow/array.h
-  src/parquet/arrow/extension_type.cc
-  src/parquet/arrow/builder.h
-  src/parquet/arrow/vendored/xxhash.h
-  src/parquet/arrow/vendored/datetime/tz_private.h
-  src/parquet/arrow/vendored/datetime/date.h
-  src/parquet/arrow/vendored/datetime/tz.h
-  src/parquet/arrow/vendored/datetime.h
-  src/parquet/arrow/vendored/variant.hpp
-  src/parquet/arrow/vendored/utf8cpp/core.h
-  src/parquet/arrow/vendored/utf8cpp/checked.h
-  src/parquet/arrow/vendored/double-conversion/utils.h
-  src/parquet/arrow/vendored/double-conversion/bignum.cc
-  src/parquet/arrow/vendored/double-conversion/fixed-dtoa.h
-  src/parquet/arrow/vendored/double-conversion/bignum-dtoa.h
-  src/parquet/arrow/vendored/double-conversion/fixed-dtoa.cc
-  src/parquet/arrow/vendored/double-conversion/strtod.h
-  src/parquet/arrow/vendored/double-conversion/diy-fp.h
-  src/parquet/arrow/vendored/double-conversion/strtod.cc
-  src/parquet/arrow/vendored/double-conversion/cached-powers.h
-  src/parquet/arrow/vendored/double-conversion/double-conversion.h
-  src/parquet/arrow/vendored/double-conversion/fast-dtoa.cc
-  src/parquet/arrow/vendored/double-conversion/cached-powers.cc
-  src/parquet/arrow/vendored/double-conversion/double-conversion.cc
-  src/parquet/arrow/vendored/double-conversion/diy-fp.cc
-  src/parquet/arrow/vendored/double-conversion/ieee.h
-  src/parquet/arrow/vendored/double-conversion/bignum.h
-  src/parquet/arrow/vendored/double-conversion/fast-dtoa.h
-  src/parquet/arrow/vendored/double-conversion/bignum-dtoa.cc
-  src/parquet/arrow/vendored/string_view.hpp
-  src/parquet/arrow/vendored/xxhash/xxhash.h
-  src/parquet/arrow/vendored/xxhash/xxhash.c
-  src/parquet/arrow/vendored/xxhash/xxh3.h
-  src/parquet/arrow/table.h
-  src/parquet/arrow/type_traits.h
-  src/parquet/arrow/record_batch.cc
-  src/parquet/arrow/tensor.h
-  src/parquet/arrow/pretty_print.h
-  src/parquet/arrow/extension_type.h
-  src/parquet/parquet/column_writer.h
-  src/parquet/parquet/statistics.cc
-  src/parquet/parquet/internal_file_encryptor.cc
-  src/parquet/parquet/encryption_internal.h
-  src/parquet/parquet/schema.cc
-  src/parquet/parquet/column_writer.cc
-  src/parquet/parquet/types.h
-  src/parquet/parquet/parquet_version.h
-  src/parquet/parquet/schema_internal.h
-  src/parquet/parquet/platform.cc
-  src/parquet/parquet/encryption.h
-  src/parquet/parquet/encoding.h
-  src/parquet/parquet/schema.h
-  src/parquet/parquet/encryption_internal.cc
-  src/parquet/parquet/metadata.h
-  src/parquet/parquet/thrift_internal.h
-  src/parquet/parquet/internal_file_decryptor.h
-  src/parquet/parquet/io.h
-  src/parquet/parquet/statistics.h
-  src/parquet/parquet/types.cc
-  src/parquet/parquet/internal_file_decryptor.cc
-  src/parquet/parquet/internal_file_encryptor.h
-  src/parquet/parquet/exception.h
-  src/parquet/parquet/column_page.h
-  src/parquet/parquet/platform.h
-  src/parquet/parquet/properties.cc
-  src/parquet/parquet/encryption.cc
-  src/parquet/parquet/properties.h
-  src/parquet/parquet/metadata.cc
-  src/parquet/parquet/encoding.cc
+#SOURCE FILES
+src/parquet/arrow/array/builder_decimal.cc
+src/parquet/arrow/array/dict_internal.h
+src/parquet/arrow/record_batch.cc
+src/parquet/arrow/util/io_util.cc
+src/parquet/arrow/compute/kernels/util_internal.cc
+src/parquet/arrow/array.cc
+src/parquet/arrow/vendored/double-conversion/fast-dtoa.h
+src/parquet/arrow/compute/operation.cc
+src/parquet/parquet/platform.cc
+src/parquet/arrow/util/thread_pool.cc
+src/parquet/arrow/util/iterator.cc
+src/parquet/arrow/vendored/utf8cpp/core.h
+src/parquet/arrow/vendored/double-conversion/bignum.h
+src/parquet/arrow/vendored/double-conversion/bignum-dtoa.h
+src/parquet/arrow/compute/kernels/aggregate.h
+src/parquet/arrow/tensor.h
+src/parquet/arrow/type.cc
+src/parquet/arrow/array/diff.h
+src/parquet/arrow/sparse_tensor.h
+src/parquet/arrow/util/memory.cc
+src/parquet/arrow/vendored/utf8cpp/checked.h
+src/parquet/arrow/compute/kernels/sum_internal.h
+src/parquet/arrow/builder.cc
+src/parquet/arrow/util/bit_stream_utils.h
+src/parquet/arrow/compute/logical_type.h
+src/parquet/arrow/visitor.cc
+src/parquet/arrow/compute/context.h
+src/parquet/arrow/util/decimal.cc
+src/parquet/arrow/compute/kernels/count.cc
+src/parquet/arrow/util/bit_util.cc
+src/parquet/parquet/column_reader.cc
+src/parquet/arrow/compute/kernels/sum.cc
+src/parquet/arrow/util/int_util.h
+src/parquet/arrow/vendored/double-conversion/diy-fp.h
+src/parquet/arrow/compute/kernels/compare.cc
+src/parquet/arrow/io/util_internal.h
+src/parquet/parquet/internal_file_encryptor.cc
+src/parquet/parquet/schema_internal.h
+src/parquet/arrow/array/builder_union.cc
+src/parquet/parquet/internal_file_decryptor.cc
+src/parquet/parquet/encryption_internal.cc
+src/parquet/parquet/deprecated_io.cc
+src/parquet/arrow/util/basic_decimal.cc
+src/parquet/arrow/vendored/double-conversion/strtod.cc
+src/parquet/arrow/vendored/double-conversion/ieee.h
+src/parquet/arrow/vendored/datetime.h
+src/parquet/arrow/array/diff.cc
+src/parquet/arrow/util/int_util.cc
+src/parquet/parquet/encoding.cc
+src/parquet/arrow/io/memory.cc
+src/parquet/arrow/compute/kernels/count.h
+src/parquet/arrow/compute/kernels/take_internal.h
+src/parquet/arrow/io/interfaces.cc
+src/parquet/arrow/array/builder_base.cc
+src/parquet/arrow/array/builder_nested.cc
+src/parquet/parquet/column_writer.cc
+src/parquet/arrow/util/range.h
+src/parquet/arrow/vendored/double-conversion/fixed-dtoa.h
+src/parquet/parquet/metadata.cc
+src/parquet/arrow/util/cpu_info.h
+src/parquet/arrow/util/bpacking.h
+src/parquet/arrow/vendored/double-conversion/strtod.h
+src/parquet/arrow/util/utf8.h
+src/parquet/arrow/vendored/datetime/tz.h
+src/parquet/arrow/sparse_tensor.cc
+src/parquet/arrow/extension_type.cc
+src/parquet/arrow/compute/context.cc
+src/parquet/arrow/compute/kernels/sum.h
+src/parquet/arrow/compute/kernels/cast.cc
+src/parquet/arrow/array/builder_adaptive.cc
+src/parquet/arrow/vendored/double-conversion/double-conversion.h
+src/parquet/arrow/util/parsing.h
+src/parquet/arrow/util/formatting.cc
+src/parquet/arrow/compute/expression.cc
+src/parquet/parquet/column_scanner.cc
+src/parquet/arrow/tensor.cc
+src/parquet/arrow/array/concatenate.cc
+src/parquet/arrow/compute/kernels/sort_to_indices.h
+src/parquet/arrow/util/compression_snappy.h
+src/parquet/arrow/compute/kernels/boolean.cc
+src/parquet/arrow/status.cc
+src/parquet/arrow/util/iterator.h
+src/parquet/arrow/compute/kernels/boolean.h
+src/parquet/arrow/compute/kernels/sort_to_indices.cc
+src/parquet/arrow/util/parsing.cc
+src/parquet/arrow/compute/api.h
+src/parquet/arrow/util/utf8.cc
+src/parquet/arrow/compare.cc
+src/parquet/arrow/compute/kernels/aggregate.cc
+src/parquet/arrow/compute/kernels/filter.h
+src/parquet/arrow/array/builder_dict.cc
+src/parquet/arrow/memory_pool.cc
+src/parquet/arrow/compute/kernels/compare.h
+src/parquet/arrow/util/double_conversion.h
+src/parquet/arrow/compute/kernels/hash.cc
+src/parquet/arrow/util/atomic_shared_ptr.h
+src/parquet/arrow/compute/kernels/cast.h
+src/parquet/arrow/util/string_builder.cc
+src/parquet/arrow/array/builder_binary.cc
+src/parquet/arrow/io/mman.h
+src/parquet/parquet/properties.cc
+src/parquet/arrow/compute/operation.h
+src/parquet/parquet/types.cc
+src/parquet/parquet/statistics.cc
+src/parquet/arrow/io/buffered.cc
+src/parquet/parquet/schema.cc
+src/parquet/arrow/util/key_value_metadata.cc
+src/parquet/arrow/compute/kernels/util_internal.h
+src/parquet/arrow/array/builder_primitive.cc
+src/parquet/arrow/util/make_unique.h
+src/parquet/arrow/vendored/xxhash.h
+src/parquet/arrow/vendored/double-conversion/diy-fp.cc
+src/parquet/arrow/compute/kernels/mean.cc
+src/parquet/arrow/util/hashing.h
+src/parquet/arrow/vendored/double-conversion/bignum-dtoa.cc
+src/parquet/arrow/compute/kernels/take.cc
+src/parquet/parquet/column_page.h
+src/parquet/arrow/util/string.cc
+src/parquet/parquet/encryption.cc
+src/parquet/arrow/vendored/double-conversion/fast-dtoa.cc
+src/parquet/arrow/compute/expression.h
+src/parquet/arrow/util/align_util.h
+src/parquet/arrow/util/thread_pool.h
+src/parquet/arrow/vendored/xxhash/xxh3.h
+src/parquet/arrow/compute/kernels/isin.h
+src/parquet/arrow/array/dict_internal.cc
+src/parquet/arrow/vendored/datetime/date.h
+src/parquet/arrow/vendored/double-conversion/cached-powers.cc
+src/parquet/arrow/compute/kernels/hash.h
+src/parquet/arrow/io/file.cc
+src/parquet/arrow/vendored/double-conversion/bignum.cc
+src/parquet/arrow/compute/type_fwd.h
+src/parquet/arrow/vendored/double-conversion/utils.h
+src/parquet/arrow/compute/kernels/generated/cast_codegen_internal.h
+src/parquet/arrow/compute/kernels/filter.cc
+src/parquet/arrow/util/cpu_info.cc
+src/parquet/arrow/util/rle_encoding.h
+src/parquet/arrow/util/compression_snappy.cc
+src/parquet/arrow/vendored/xxhash/xxhash.h
+src/parquet/arrow/util/logging.cc
+src/parquet/arrow/vendored/xxhash/xxhash.c
+src/parquet/arrow/result.cc
+src/parquet/arrow/util/formatting.h
+src/parquet/arrow/compute/kernels/isin.cc
+src/parquet/arrow/compute/kernels/mean.h
+src/parquet/arrow/stl.h
+src/parquet/arrow/pretty_print.cc
+src/parquet/arrow/scalar.cc
+src/parquet/arrow/vendored/datetime/tz_private.h
+src/parquet/arrow/util/compression.cc
+src/parquet/arrow/compute/kernels/take.h
+src/parquet/arrow/compute/logical_type.cc
+src/parquet/arrow/vendored/double-conversion/fixed-dtoa.cc
+src/parquet/arrow/vendored/double-conversion/cached-powers.h
+src/parquet/parquet/encoding.h
+src/parquet/arrow/vendored/double-conversion/double-conversion.cc
+#HEADER FILES
+include/seastar/parquet/arrow/array/builder_adaptive.h
+include/seastar/parquet/parquet/column_writer.h
+include/seastar/parquet/parquet/file_writer.h
+include/seastar/parquet/arrow/compute/kernel.h
+include/seastar/parquet/arrow/io/memory.h
+include/seastar/parquet/arrow/pretty_print.h
+include/seastar/parquet/parquet/encryption.h
+include/seastar/parquet/arrow/array/builder_primitive.h
+include/seastar/parquet/parquet/column_reader.h
+include/seastar/parquet/arrow/io/buffered.h
+include/seastar/parquet/parquet/statistics.h
+include/seastar/parquet/parquet/encryption_internal.h
+include/seastar/parquet/parquet/file_reader.h
+include/seastar/parquet/arrow/util/windows_compatibility.h
+include/seastar/parquet/parquet/io.h
+include/seastar/parquet/arrow/array/concatenate.h
+include/seastar/parquet/arrow/util/type_traits.h
+include/seastar/parquet/arrow/io/concurrency.h
+include/seastar/parquet/arrow/scalar.h
+include/seastar/parquet/parquet/properties.h
+include/seastar/parquet/parquet/metadata.h
+include/seastar/parquet/arrow/util/string_view.h
+include/seastar/parquet/arrow/buffer.h
+include/seastar/parquet/parquet/internal_file_encryptor.h
+include/seastar/parquet/arrow/util/compression.h
+include/seastar/parquet/parquet/column_scanner.h
+include/seastar/parquet/arrow/vendored/string_view.hpp
+include/seastar/parquet/parquet/platform.h
+include/seastar/parquet/arrow/util/macros.h
+include/seastar/parquet/arrow/util/variant.h
+include/seastar/parquet/parquet/deprecated_io.h
+include/seastar/parquet/parquet/schema.h
+include/seastar/parquet/arrow/util/bit_util.h
+include/seastar/parquet/arrow/array/builder_base.h
+include/seastar/parquet/arrow/type.h
+include/seastar/parquet/arrow/util/stl.h
+include/seastar/parquet/arrow/array/builder_decimal.h
+include/seastar/parquet/arrow/util/string_builder.h
+include/seastar/parquet/arrow/io/interfaces.h
+include/seastar/parquet/arrow/array/builder_dict.h
+include/seastar/parquet/arrow/util/memory.h
+include/seastar/parquet/arrow/util/functional.h
+include/seastar/parquet/arrow/compare.h
+include/seastar/parquet/parquet/internal_file_decryptor.h
+include/seastar/parquet/arrow/util/logging.h
+include/seastar/parquet/arrow/status.h
+include/seastar/parquet/arrow/type_traits.h
+include/seastar/parquet/arrow/result.h
+include/seastar/parquet/arrow/visitor.h
+include/seastar/parquet/arrow/table.h
+include/seastar/parquet/arrow/util/checked_cast.h
+include/seastar/parquet/parquet/types.h
+include/seastar/parquet/arrow/util/visibility.h
+include/seastar/parquet/arrow/util/basic_decimal.h
+include/seastar/parquet/parquet/exception.h
+include/seastar/parquet/arrow/extension_type.h
+include/seastar/parquet/parquet/thrift_internal.h
+include/seastar/parquet/arrow/builder.h
+include/seastar/parquet/arrow/util/compare.h
+include/seastar/parquet/arrow/array.h
+include/seastar/parquet/arrow/util/ubsan.h
+include/seastar/parquet/arrow/util/key_value_metadata.h
+include/seastar/parquet/arrow/type_fwd.h
+include/seastar/parquet/arrow/array/builder_time.h
+include/seastar/parquet/arrow/util/string.h
+include/seastar/parquet/arrow/io/file.h
+include/seastar/parquet/arrow/visitor_inline.h
+include/seastar/parquet/arrow/util/decimal.h
+include/seastar/parquet/arrow/memory_pool.h
+include/seastar/parquet/arrow/array/builder_nested.h
+include/seastar/parquet/arrow/array/builder_binary.h
+include/seastar/parquet/arrow/vendored/variant.hpp
+include/seastar/parquet/arrow/util/io_util.h
+include/seastar/parquet/arrow/array/builder_union.h
+include/seastar/parquet/arrow/buffer_builder.h
+include/seastar/parquet/arrow/record_batch.h
 
   include/seastar/core/abort_source.hh
   include/seastar/core/alien.hh

@@ -25,16 +25,16 @@
 #include <type_traits>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/pretty_print.h"
-#include "parquet/arrow/record_batch.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/table.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/record_batch.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/table.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/int_util.h"
-#include "parquet/arrow/util/string.h"
+#include <seastar/parquet/arrow/util/string.h>
 #include "parquet/arrow/vendored/datetime.h"
 #include "parquet/arrow/visitor_inline.h"
 

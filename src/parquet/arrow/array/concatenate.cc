@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/array/concatenate.h"
+#include <seastar/parquet/arrow/array/concatenate.h>
 
 #include <algorithm>
 #include <limits>
@@ -23,11 +23,11 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/memory_pool.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/memory_pool.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

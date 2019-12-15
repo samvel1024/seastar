@@ -23,7 +23,7 @@
 
 #include "parquet/arrow/compute/logical_type.h"
 #include "parquet/arrow/compute/operation.h"
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 
 namespace arrow {
 namespace compute {

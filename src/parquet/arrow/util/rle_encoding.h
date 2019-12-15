@@ -25,8 +25,8 @@
 #include <algorithm>
 
 #include "parquet/arrow/util/bit_stream_utils.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/macros.h"
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/macros.h>
 
 namespace arrow {
 namespace util {

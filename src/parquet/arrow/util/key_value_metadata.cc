@@ -25,9 +25,9 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/util/key_value_metadata.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/stl.h"
+#include <seastar/parquet/arrow/util/key_value_metadata.h>
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/stl.h>
 
 using std::size_t;
 

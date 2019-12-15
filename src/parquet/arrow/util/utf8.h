@@ -24,10 +24,10 @@
 #include <memory>
 #include <string>
 
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/string_view.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/string_view.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace util {

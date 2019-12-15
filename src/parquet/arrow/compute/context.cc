@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/util/cpu_info.h"
 
 namespace arrow {

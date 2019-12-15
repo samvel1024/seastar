@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/util/utf8.h"
 #include "parquet/arrow/vendored/utf8cpp/checked.h"
 

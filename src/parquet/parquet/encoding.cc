@@ -25,20 +25,20 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/builder.h"
 #include "parquet/arrow/stl.h"
 #include "parquet/arrow/util/bit_stream_utils.h"
-#include "parquet/arrow/util/checked_cast.h"
+#include <seastar/parquet/arrow/util/checked_cast.h>
 #include "parquet/arrow/util/hashing.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/util/rle_encoding.h"
-#include "parquet/arrow/util/ubsan.h"
+#include <seastar/parquet/arrow/util/ubsan.h>
 
-#include "parquet/parquet/exception.h"
-#include "parquet/parquet/platform.h"
-#include "parquet/parquet/schema.h"
-#include "parquet/parquet/types.h"
+#include <seastar/parquet/parquet/exception.h>
+#include <seastar/parquet/parquet/platform.h>
+#include <seastar/parquet/parquet/schema.h>
+#include <seastar/parquet/parquet/types.h>
 
 using arrow::Status;
 using arrow::internal::checked_cast;

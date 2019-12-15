@@ -18,7 +18,7 @@
 #include "parquet/arrow/util/formatting.h"
 #include "parquet/arrow/util/config.h"
 #include "parquet/arrow/util/double_conversion.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 

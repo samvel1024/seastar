@@ -25,18 +25,18 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/buffer_builder.h"
-#include "parquet/arrow/memory_pool.h"
+#include <seastar/parquet/arrow/memory_pool.h>
 #include "parquet/arrow/pretty_print.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/util/range.h"
-#include "parquet/arrow/util/string.h"
-#include "parquet/arrow/util/variant.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/util/string.h>
+#include <seastar/parquet/arrow/util/variant.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 #include "parquet/arrow/vendored/datetime.h"
 #include "parquet/arrow/visitor_inline.h"
 

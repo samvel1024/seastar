@@ -20,14 +20,14 @@
 #ifndef ARROW_VISITOR_INLINE_H
 #define ARROW_VISITOR_INLINE_H
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/extension_type.h"
 #include "parquet/arrow/scalar.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/string_view.h"
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/string_view.h>
 
 namespace arrow {
 

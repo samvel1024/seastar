@@ -22,14 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/record_batch.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/record_batch.h>
 #include "parquet/arrow/scalar.h"
-#include "parquet/arrow/table.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/memory.h"
-#include "parquet/arrow/util/variant.h"  // IWYU pragma: export
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/table.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/memory.h>
+#include <seastar/parquet/arrow/util/variant.h>  // IWYU pragma: export
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 namespace compute {

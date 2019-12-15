@@ -21,10 +21,10 @@
 #include <iosfwd>
 #include <memory>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/result.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/result.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

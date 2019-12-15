@@ -20,9 +20,9 @@
 #include <memory>
 
 #include "parquet/arrow/compute/kernel.h"
-#include "parquet/arrow/record_batch.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/record_batch.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

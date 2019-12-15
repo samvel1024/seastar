@@ -10,14 +10,14 @@
 // non-const method, all threads accessing the same Status must use
 // external synchronization.
 
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 

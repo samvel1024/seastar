@@ -15,14 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/parquet/platform.h"
+#include <seastar/parquet/parquet/platform.h>
 
 #include <cstdint>
 #include <memory>
 
-#include "parquet/arrow/io/memory.h"
+#include <seastar/parquet/arrow/io/memory.h>
 
-#include "parquet/parquet/exception.h"
+#include <seastar/parquet/parquet/exception.h>
 
 namespace parquet {
 

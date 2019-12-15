@@ -23,12 +23,12 @@
 #include <string>
 #include <vector>
 
-#include "parquet/arrow/buffer.h"
-#include "parquet/arrow/compare.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/buffer.h>
+#include <seastar/parquet/arrow/compare.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

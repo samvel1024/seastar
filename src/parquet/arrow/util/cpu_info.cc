@@ -34,7 +34,7 @@
 #include <intrin.h>
 #include <array>
 #include <bitset>
-#include "parquet/arrow/util/windows_compatibility.h"
+#include <seastar/parquet/arrow/util/windows_compatibility.h>
 
 #endif
 
@@ -45,8 +45,8 @@
 #include <mutex>
 #include <string>
 
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/string.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/string.h>
 
 using std::max;
 

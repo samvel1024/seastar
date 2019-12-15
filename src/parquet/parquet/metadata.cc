@@ -21,18 +21,18 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/logging.h>
 
 #include <inttypes.h>
-#include "parquet/parquet/encryption_internal.h"
-#include "parquet/parquet/exception.h"
-#include "parquet/parquet/internal_file_decryptor.h"
-#include "parquet/parquet/metadata.h"
-#include "parquet/parquet/schema.h"
+#include <seastar/parquet/parquet/encryption_internal.h>
+#include <seastar/parquet/parquet/exception.h>
+#include <seastar/parquet/parquet/internal_file_decryptor.h>
+#include <seastar/parquet/parquet/metadata.h>
+#include <seastar/parquet/parquet/schema.h>
 #include "parquet/parquet/schema_internal.h"
-#include "parquet/parquet/statistics.h"
-#include "parquet/parquet/thrift_internal.h"
-#include "parquet/parquet/io.h"
+#include <seastar/parquet/parquet/statistics.h>
+#include <seastar/parquet/parquet/thrift_internal.h>
+#include <seastar/parquet/parquet/io.h>
 
 // ARROW-6096: The boost regex library must be used when compiling with gcc < 4.9
 #if defined(PARQUET_USE_BOOST_REGEX)

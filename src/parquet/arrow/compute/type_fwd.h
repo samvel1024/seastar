@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "parquet/arrow/type_fwd.h"
+#include <seastar/parquet/arrow/type_fwd.h>
 
 namespace arrow {
 namespace compute {

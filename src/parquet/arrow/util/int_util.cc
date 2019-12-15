@@ -21,8 +21,8 @@
 #include <cstring>
 #include <limits>
 
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
 namespace internal {

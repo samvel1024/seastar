@@ -20,16 +20,16 @@
 #include <cstring>
 #include <type_traits>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
 
 #include "parquet/parquet/encoding.h"
-#include "parquet/parquet/exception.h"
-#include "parquet/parquet/platform.h"
-#include "parquet/parquet/schema.h"
-#include "parquet/parquet/statistics.h"
+#include <seastar/parquet/parquet/exception.h>
+#include <seastar/parquet/parquet/platform.h>
+#include <seastar/parquet/parquet/schema.h>
+#include <seastar/parquet/parquet/statistics.h>
 
 using arrow::default_memory_pool;
 using arrow::MemoryPool;

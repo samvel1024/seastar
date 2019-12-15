@@ -23,9 +23,9 @@
 #include <string>
 #include <type_traits>
 
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 #include "parquet/arrow/util/basic_decimal.h"
-#include "parquet/arrow/util/string_view.h"
+#include <seastar/parquet/arrow/util/string_view.h>
 
 namespace arrow {
 

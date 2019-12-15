@@ -24,12 +24,12 @@
 #include <unordered_map>
 #include <utility>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

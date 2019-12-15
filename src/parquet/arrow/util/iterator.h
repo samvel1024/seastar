@@ -24,12 +24,12 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/result.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/util/compare.h"
-#include "parquet/arrow/util/functional.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/result.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/util/compare.h>
+#include <seastar/parquet/arrow/util/functional.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

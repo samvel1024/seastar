@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/util/compression.h"
+#include <seastar/parquet/arrow/util/compression.h>
 
 #include <limits>
 #include <memory>
@@ -45,7 +45,7 @@
 #include "parquet/arrow/util/compression_bz2.h"
 #endif
 
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 
 namespace arrow {
 namespace util {

@@ -17,7 +17,7 @@
 
 // Functions for comparing Arrow data structures
 
-#include "parquet/arrow/compare.h"
+#include <seastar/parquet/arrow/compare.h>
 
 #include <climits>
 #include <cmath>
@@ -29,20 +29,20 @@
 #include <utility>
 #include <vector>
 
-#include "parquet/arrow/array.h"
+#include <seastar/parquet/arrow/array.h>
 #include "parquet/arrow/array/diff.h"
-#include "parquet/arrow/buffer.h"
+#include <seastar/parquet/arrow/buffer.h>
 #include "parquet/arrow/scalar.h"
 #include "parquet/arrow/sparse_tensor.h"
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 #include "parquet/arrow/tensor.h"
-#include "parquet/arrow/type.h"
-#include "parquet/arrow/type_traits.h"
-#include "parquet/arrow/util/bit_util.h"
-#include "parquet/arrow/util/checked_cast.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/macros.h"
-#include "parquet/arrow/util/memory.h"
+#include <seastar/parquet/arrow/type.h>
+#include <seastar/parquet/arrow/type_traits.h>
+#include <seastar/parquet/arrow/util/bit_util.h>
+#include <seastar/parquet/arrow/util/checked_cast.h>
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/macros.h>
+#include <seastar/parquet/arrow/util/memory.h>
 #include "parquet/arrow/visitor_inline.h"
 
 namespace arrow {

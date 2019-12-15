@@ -15,11 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/util/string.h"
+#include <seastar/parquet/arrow/util/string.h>
 
 #include <algorithm>
 
-#include "parquet/arrow/status.h"
+#include <seastar/parquet/arrow/status.h>
 
 namespace arrow {
 

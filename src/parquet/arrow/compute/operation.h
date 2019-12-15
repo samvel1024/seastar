@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "parquet/arrow/compute/type_fwd.h"
-#include "parquet/arrow/util/visibility.h"
+#include <seastar/parquet/arrow/util/visibility.h>
 
 namespace arrow {
 

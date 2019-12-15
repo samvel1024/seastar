@@ -26,8 +26,8 @@
 #include <memory>
 #include <string>
 
-#include "parquet/parquet/statistics.h"
-#include "parquet/parquet/types.h"
+#include <seastar/parquet/parquet/statistics.h>
+#include <seastar/parquet/parquet/types.h>
 
 namespace parquet {
 

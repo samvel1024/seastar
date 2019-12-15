@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/record_batch.h"
+#include <seastar/parquet/arrow/record_batch.h>
 
 #include <algorithm>
 #include <atomic>
@@ -24,14 +24,14 @@
 #include <string>
 #include <utility>
 
-#include "parquet/arrow/array.h"
-#include "parquet/arrow/status.h"
-#include "parquet/arrow/table.h"
-#include "parquet/arrow/type.h"
+#include <seastar/parquet/arrow/array.h>
+#include <seastar/parquet/arrow/status.h>
+#include <seastar/parquet/arrow/table.h>
+#include <seastar/parquet/arrow/type.h>
 #include "parquet/arrow/util/atomic_shared_ptr.h"
 #include "parquet/arrow/util/iterator.h"
-#include "parquet/arrow/util/logging.h"
-#include "parquet/arrow/util/stl.h"
+#include <seastar/parquet/arrow/util/logging.h>
+#include <seastar/parquet/arrow/util/stl.h>
 
 namespace arrow {
 
