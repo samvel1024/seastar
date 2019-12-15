@@ -390,7 +390,8 @@ include(FindPythonInterp)
 include(ExternalProject)
 set(ARROW_WITH_SNAPPY ON)
 set(ARROW_WITH_THRIFT ON)
-#set(ARROW_WITH_RAPIDJSON ON)
+set(ARROW_USE_OPEN_SSL ON)
+set(PARQUET_REQUIRE_ENCRYPTION ON)
 set(THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake/arrow_build)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ArrowBuild.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindThrift.cmake)
@@ -435,6 +436,7 @@ src/parquet/arrow/util/decimal.cc
 src/parquet/arrow/compute/kernels/count.cc
 src/parquet/arrow/util/bit_util.cc
 src/parquet/parquet/column_reader.cc
+src/parquet/parquet/parquet_types.cc
 src/parquet/arrow/compute/kernels/sum.cc
 src/parquet/arrow/util/int_util.h
 src/parquet/arrow/vendored/double-conversion/diy-fp.h
@@ -517,6 +519,9 @@ src/parquet/arrow/vendored/xxhash.h
 src/parquet/arrow/vendored/double-conversion/diy-fp.cc
 src/parquet/arrow/compute/kernels/mean.cc
 src/parquet/arrow/util/hashing.h
+src/parquet/arrow/buffer.cc
+src/parquet/arrow/table.cc
+src/parquet/parquet/encoding.cc
 src/parquet/arrow/vendored/double-conversion/bignum-dtoa.cc
 src/parquet/arrow/compute/kernels/take.cc
 src/parquet/arrow/util/string.cc
