@@ -401,10 +401,11 @@ seastar_add_test(parquet_column_writer_test
         parquet/random.h
         parquet/util.h
         parquet/util.cc
+        parquet/test_util.cc
         parquet/gtest_util.cc
         parquet/random.cc
         parquet/parquet_column_writer_test.cc
-  LIBRARIES GTest)
+  LIBRARIES gtest_main)
 
 set (tls_certificate_files
   catest.key

@@ -29,7 +29,7 @@
 #include <seastar/parquet/parquet/platform.h>
 #include <seastar/parquet/parquet/properties.h>
 #include <seastar/parquet/parquet/statistics.h>
-#include "util.h"
+#include "test_util.h"
 #include <seastar/parquet/parquet/thrift_internal.h>
 #include <seastar/parquet/parquet/types.h>
 #include <seastar/parquet/parquet/io.h>

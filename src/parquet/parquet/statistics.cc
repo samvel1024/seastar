@@ -25,7 +25,7 @@
 #include <seastar/parquet/arrow/util/checked_cast.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
-#include "parquet/parquet/encoding.h"
+#include <seastar/parquet/parquet/encoding.h>
 #include <seastar/parquet/parquet/exception.h>
 #include <seastar/parquet/parquet/platform.h>
 #include <seastar/parquet/parquet/schema.h>

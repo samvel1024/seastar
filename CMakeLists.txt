@@ -452,7 +452,6 @@ src/parquet/arrow/vendored/double-conversion/ieee.h
 src/parquet/arrow/vendored/datetime.h
 src/parquet/arrow/array/diff.cc
 src/parquet/arrow/util/int_util.cc
-src/parquet/parquet/encoding.cc
 src/parquet/arrow/io/memory.cc
 src/parquet/arrow/compute/kernels/count.h
 src/parquet/arrow/compute/kernels/take_internal.h
@@ -520,7 +519,6 @@ src/parquet/arrow/compute/kernels/mean.cc
 src/parquet/arrow/util/hashing.h
 src/parquet/arrow/vendored/double-conversion/bignum-dtoa.cc
 src/parquet/arrow/compute/kernels/take.cc
-src/parquet/parquet/column_page.h
 src/parquet/arrow/util/string.cc
 src/parquet/parquet/encryption.cc
 src/parquet/arrow/vendored/double-conversion/fast-dtoa.cc
@@ -558,7 +556,6 @@ src/parquet/arrow/compute/kernels/take.h
 src/parquet/arrow/compute/logical_type.cc
 src/parquet/arrow/vendored/double-conversion/fixed-dtoa.cc
 src/parquet/arrow/vendored/double-conversion/cached-powers.h
-src/parquet/parquet/encoding.h
 src/parquet/arrow/vendored/double-conversion/double-conversion.cc
 #HEADER FILES
 include/seastar/parquet/arrow/array/builder_adaptive.h
@@ -572,8 +569,10 @@ include/seastar/parquet/arrow/array/builder_primitive.h
 include/seastar/parquet/parquet/column_reader.h
 include/seastar/parquet/arrow/io/buffered.h
 include/seastar/parquet/parquet/statistics.h
+include/seastar/parquet/parquet/column_page.h
 include/seastar/parquet/parquet/encryption_internal.h
 include/seastar/parquet/parquet/file_reader.h
+include/seastar/parquet/parquet/encoding.h
 include/seastar/parquet/arrow/util/windows_compatibility.h
 include/seastar/parquet/parquet/io.h
 include/seastar/parquet/arrow/array/concatenate.h

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/parquet/encoding.h"
+#include <seastar/parquet/parquet/encoding.h>
 
 #include <algorithm>
 #include <cstdint>

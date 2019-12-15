@@ -38,8 +38,8 @@
 #include <seastar/parquet/arrow/util/logging.h>
 #include "parquet/arrow/util/rle_encoding.h"
 
-#include "parquet/parquet/column_page.h"
-#include "parquet/parquet/encoding.h"
+#include <seastar/parquet/parquet/column_page.h>
+#include <seastar/parquet/parquet/encoding.h>
 #include <seastar/parquet/parquet/encryption_internal.h>
 #include <seastar/parquet/parquet/internal_file_encryptor.h>
 #include <seastar/parquet/parquet/metadata.h>
