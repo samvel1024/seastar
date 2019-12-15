@@ -388,6 +388,7 @@ endif ()
 # ---------- Arrow/Parquet ----------------------
 include(FindPythonInterp)
 include(ExternalProject)
+#TODO [PQ] Below definitions have nothing to do with macros in the code, this is only for ArrowBuild.cmake to work somewhat properly
 set(ARROW_WITH_SNAPPY ON)
 set(ARROW_WITH_THRIFT ON)
 set(ARROW_USE_OPEN_SSL ON)
@@ -403,7 +404,7 @@ add_library (seastar STATIC
   ${seastar_dpdk_obj}
 
 
-  #TODO [PQ] Merge with above list
+  #TODO [PQ] Move to a separate target/library/Cmake file
 #SOURCE FILES
 src/parquet/arrow/array/builder_decimal.cc
 src/parquet/arrow/array/dict_internal.h
@@ -954,6 +955,9 @@ endif ()
 #
 # We disable _FORTIFY_SOURCE because it generates false positives with longjmp() (src/core/thread.cc)
 #
+
+# TODO [PQ] This should be moved to some other place
+target_compile_definitions(seastar PUBLIC ARROW_WITH_SNAPPY)
 
 target_compile_options (seastar
   PUBLIC

@@ -404,8 +404,9 @@ seastar_add_test(parquet_column_writer_test
         parquet/test_util.cc
         parquet/gtest_util.cc
         parquet/random.cc
+        parquet/gtest_seastar_main.cc
         parquet/parquet_column_writer_test.cc
-  LIBRARIES gtest_main gtest crypto) # TODO [PQ] does crypto really belong to here ?
+  LIBRARIES gtest crypto) # TODO [PQ] does crypto really belong to here ?
 
 set (tls_certificate_files
   catest.key
