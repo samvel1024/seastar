@@ -394,19 +394,31 @@ seastar_add_test (uname
   KIND BOOST
   SOURCES uname_test.cc)
 
+# TODO [PQ] Modify seastar_add_test (maybe by adding a new KIND for parquet)
+list(APPEND PARQUET_TEST_HELPERS
+    parquet/gtest_util.h
+    parquet/random.h
+    parquet/util.h
+    parquet/util.cc
+    parquet/test_util.cc
+    parquet/gtest_util.cc
+    parquet/random.cc
+    parquet/gtest_seastar_main.cc)
 find_package(GTest REQUIRED)
+# TODO [PQ] does crypto really belong to here ?
 seastar_add_test(parquet_column_writer_test
   SOURCES
-        parquet/gtest_util.h
-        parquet/random.h
-        parquet/util.h
-        parquet/util.cc
-        parquet/test_util.cc
-        parquet/gtest_util.cc
-        parquet/random.cc
-        parquet/gtest_seastar_main.cc
-        parquet/parquet_column_writer_test.cc
-  LIBRARIES gtest crypto) # TODO [PQ] does crypto really belong to here ?
+    ${PARQUET_TEST_HELPERS}
+    parquet/parquet_column_writer_test.cc
+  LIBRARIES
+    gtest crypto)
+seastar_add_test(parquet_file_serialize_test
+  SOURCES
+    ${PARQUET_TEST_HELPERS}
+    parquet/parquet_file_serialize_test_seastar.cc
+  LIBRARIES
+    gtest crypto)
+
 
 set (tls_certificate_files
   catest.key

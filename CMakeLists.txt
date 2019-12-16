@@ -449,6 +449,8 @@ src/parquet/arrow/array/builder_union.cc
 src/parquet/parquet/internal_file_decryptor.cc
 src/parquet/parquet/encryption_internal.cc
 src/parquet/parquet/deprecated_io.cc
+src/parquet/parquet/file_writer.cc
+src/parquet/parquet/file_reader.cc
 src/parquet/arrow/util/basic_decimal.cc
 src/parquet/arrow/vendored/double-conversion/strtod.cc
 src/parquet/arrow/vendored/double-conversion/ieee.h
