@@ -146,13 +146,13 @@ namespace arrow {
 
 typedef ::testing::Types<UInt8Type, UInt16Type, UInt32Type, UInt64Type, Int8Type,
                          Int16Type, Int32Type, Int64Type, FloatType, DoubleType>
-    NumericArrowTypes;
+  NumericArrowTypes;
 
 typedef ::testing::Types<FloatType, DoubleType> RealArrowTypes;
 
 typedef testing::Types<UInt8Type, UInt16Type, UInt32Type, UInt64Type, Int8Type, Int16Type,
                        Int32Type, Int64Type>
-    IntegralArrowTypes;
+  IntegralArrowTypes;
 
 class Array;
 class ChunkedArray;
@@ -225,19 +225,19 @@ void FinishAndCheckPadding(BuilderType* builder, std::shared_ptr<Array>* out) {
 // ArrayFromJSON: construct an Array from a simple JSON representation
 
 ARROW_EXPORT
-std::shared_ptr<Array> ArrayFromJSON(const std::shared_ptr<DataType>&,
-                                     util::string_view json);
+  std::shared_ptr<Array> ArrayFromJSON(const std::shared_ptr<DataType>&,
+                                       util::string_view json);
 
 ARROW_EXPORT std::shared_ptr<RecordBatch> RecordBatchFromJSON(
-    const std::shared_ptr<Schema>&, util::string_view);
+  const std::shared_ptr<Schema>&, util::string_view);
 
 ARROW_EXPORT
-std::shared_ptr<ChunkedArray> ChunkedArrayFromJSON(const std::shared_ptr<DataType>&,
-                                                   const std::vector<std::string>& json);
+  std::shared_ptr<ChunkedArray> ChunkedArrayFromJSON(const std::shared_ptr<DataType>&,
+                                                     const std::vector<std::string>& json);
 
 ARROW_EXPORT
-std::shared_ptr<Table> TableFromJSON(const std::shared_ptr<Schema>&,
-                                     const std::vector<std::string>& json);
+  std::shared_ptr<Table> TableFromJSON(const std::shared_ptr<Schema>&,
+                                       const std::vector<std::string>& json);
 
 // ArrayFromVector: construct an Array from vectors of C values
 
@@ -247,7 +247,7 @@ void ArrayFromVector(const std::shared_ptr<DataType>& type,
                      std::shared_ptr<Array>* out) {
   auto type_id = TYPE::type_id;
   ASSERT_EQ(type_id, type->id())
-      << "template parameter and concrete DataType instance don't agree";
+            << "template parameter and concrete DataType instance don't agree";
 
   std::unique_ptr<ArrayBuilder> builder_ptr;
   ASSERT_OK(MakeBuilder(default_memory_pool(), type, &builder_ptr));
@@ -269,7 +269,7 @@ void ArrayFromVector(const std::shared_ptr<DataType>& type,
                      const std::vector<C_TYPE>& values, std::shared_ptr<Array>* out) {
   auto type_id = TYPE::type_id;
   ASSERT_EQ(type_id, type->id())
-      << "template parameter and concrete DataType instance don't agree";
+            << "template parameter and concrete DataType instance don't agree";
 
   std::unique_ptr<ArrayBuilder> builder_ptr;
   ASSERT_OK(MakeBuilder(default_memory_pool(), type, &builder_ptr));
@@ -382,11 +382,11 @@ void AssertSortedEquals(std::vector<T> u, std::vector<T> v) {
 // ATTENTION: may crash with an assertion failure on Windows debug builds.
 // See ARROW-6108, also https://gerrit.libreoffice.org/#/c/54110/
 class ARROW_EXPORT LocaleGuard {
- public:
+  public:
   explicit LocaleGuard(const char* new_locale);
   ~LocaleGuard();
 
- protected:
+  protected:
   class Impl;
   std::unique_ptr<Impl> impl_;
 };

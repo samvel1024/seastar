@@ -19,7 +19,7 @@
 // Parquet column chunk within a row group. It could be extended in the future
 // to iterate through all data pages in all chunks in a file.
 
-#include "parquet/test_util.h"
+#include "test_util.h"
 
 #include <algorithm>
 #include <chrono>
@@ -43,8 +43,8 @@ const char* get_data_dir() {
   const auto result = std::getenv("PARQUET_TEST_DATA");
   if (!result || !result[0]) {
     throw ParquetTestException(
-        "Please point the PARQUET_TEST_DATA environment "
-        "variable to the test data directory");
+      "Please point the PARQUET_TEST_DATA environment "
+      "variable to the test data directory");
   }
   return result;
 }

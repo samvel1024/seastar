@@ -26,15 +26,15 @@
 namespace parquet {
 
 std::shared_ptr<ArrowInputStream> ReaderProperties::GetStream(
-    std::shared_ptr<ArrowInputFile> source, int64_t start, int64_t num_bytes) {
+  std::shared_ptr<ArrowInputFile> source, int64_t start, int64_t num_bytes) {
   if (buffered_stream_enabled_) {
     // ARROW-6180 / PARQUET-1636 Create isolated reader that references segment
     // of source
     std::shared_ptr<::arrow::io::InputStream> safe_stream =
-        ::arrow::io::RandomAccessFile::GetStream(source, start, num_bytes);
+      ::arrow::io::RandomAccessFile::GetStream(source, start, num_bytes);
     std::shared_ptr<::arrow::io::BufferedInputStream> stream;
     PARQUET_THROW_NOT_OK(::arrow::io::BufferedInputStream::Create(
-        buffer_size_, pool_, safe_stream, &stream, num_bytes));
+      buffer_size_, pool_, safe_stream, &stream, num_bytes));
     return std::move(stream);
   } else {
     std::shared_ptr<Buffer> data;
@@ -50,6 +50,11 @@ std::shared_ptr<ArrowInputStream> ReaderProperties::GetStream(
   }
 }
 
+std::shared_ptr<seastarized::FutureInputStream> ReaderProperties::GetStream(
+  std::shared_ptr<seastarized::RandomAccessSource> source, int64_t start, int64_t num_bytes) {
+  return source->GetStream(start, num_bytes);
+}
+
 ArrowReaderProperties default_arrow_reader_properties() {
   static ArrowReaderProperties default_reader_props;
   return default_reader_props;
@@ -57,7 +62,7 @@ ArrowReaderProperties default_arrow_reader_properties() {
 
 std::shared_ptr<ArrowWriterProperties> default_arrow_writer_properties() {
   static std::shared_ptr<ArrowWriterProperties> default_writer_properties =
-      ArrowWriterProperties::Builder().build();
+    ArrowWriterProperties::Builder().build();
   return default_writer_properties;
 }
 

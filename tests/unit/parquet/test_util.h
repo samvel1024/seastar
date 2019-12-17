@@ -30,6 +30,8 @@
 #include <utility>
 #include <vector>
 
+#include <seastar/core/fstream.hh>
+
 #include <gtest/gtest.h>
 
 #include "util.h"
@@ -52,7 +54,7 @@ namespace test {
 
 typedef ::testing::Types<BooleanType, Int32Type, Int64Type, Int96Type, FloatType,
                          DoubleType, ByteArrayType, FLBAType>
-    ParquetTypes;
+  ParquetTypes;
 
 class ParquetTestException : public parquet::ParquetException {
   using ParquetException::ParquetException;
@@ -182,7 +184,7 @@ static void InitDictValues(int num_values, int num_dicts, std::vector<T>& values
 class MockPageReader : public PageReader {
  public:
   explicit MockPageReader(const std::vector<std::shared_ptr<Page>>& pages)
-      : pages_(pages), page_index_(0) {}
+    : pages_(pages), page_index_(0) {}
 
   std::shared_ptr<Page> NextPage() override {
     if (page_index_ == static_cast<int>(pages_.size())) {
@@ -209,14 +211,14 @@ class DataPageBuilder {
 
   // This class writes data and metadata to the passed inputs
   explicit DataPageBuilder(ArrowOutputStream* sink)
-      : sink_(sink),
-        num_values_(0),
-        encoding_(Encoding::PLAIN),
-        definition_level_encoding_(Encoding::RLE),
-        repetition_level_encoding_(Encoding::RLE),
-        have_def_levels_(false),
-        have_rep_levels_(false),
-        have_values_(false) {}
+    : sink_(sink),
+      num_values_(0),
+      encoding_(Encoding::PLAIN),
+      definition_level_encoding_(Encoding::RLE),
+      repetition_level_encoding_(Encoding::RLE),
+      have_def_levels_(false),
+      have_rep_levels_(false),
+      have_values_(false) {}
 
   void AppendDefLevels(const std::vector<int16_t>& levels, int16_t max_level,
                        Encoding::type encoding = Encoding::RLE) {
@@ -239,7 +241,7 @@ class DataPageBuilder {
   void AppendValues(const ColumnDescriptor* d, const std::vector<T>& values,
                     Encoding::type encoding = Encoding::PLAIN) {
     std::shared_ptr<Buffer> values_sink = EncodeValues<Type>(
-        encoding, false, values.data(), static_cast<int>(values.size()), d);
+      encoding, false, values.data(), static_cast<int>(values.size()), d);
     PARQUET_THROW_NOT_OK(sink_->Write(values_sink->data(), values_sink->size()));
 
     num_values_ = std::max(static_cast<int32_t>(values.size()), num_values_);
@@ -288,7 +290,7 @@ class DataPageBuilder {
 
     int32_t rle_bytes = encoder.len();
     PARQUET_THROW_NOT_OK(
-        sink_->Write(reinterpret_cast<const uint8_t*>(&rle_bytes), sizeof(int32_t)));
+      sink_->Write(reinterpret_cast<const uint8_t*>(&rle_bytes), sizeof(int32_t)));
     PARQUET_THROW_NOT_OK(sink_->Write(encode_buffer.data(), rle_bytes));
   }
 };
@@ -303,7 +305,7 @@ inline void DataPageBuilder<BooleanType>::AppendValues(const ColumnDescriptor* d
 
   auto encoder = MakeTypedEncoder<BooleanType>(Encoding::PLAIN, false, d);
   dynamic_cast<BooleanEncoder*>(encoder.get())
-      ->Put(values, static_cast<int>(values.size()));
+    ->Put(values, static_cast<int>(values.size()));
   std::shared_ptr<Buffer> buffer = encoder->FlushValues();
   PARQUET_THROW_NOT_OK(sink_->Write(buffer->data(), buffer->size()));
 
@@ -314,10 +316,10 @@ inline void DataPageBuilder<BooleanType>::AppendValues(const ColumnDescriptor* d
 
 template <typename Type>
 static std::shared_ptr<DataPageV1> MakeDataPage(
-    const ColumnDescriptor* d, const std::vector<typename Type::c_type>& values,
-    int num_vals, Encoding::type encoding, const uint8_t* indices, int indices_size,
-    const std::vector<int16_t>& def_levels, int16_t max_def_level,
-    const std::vector<int16_t>& rep_levels, int16_t max_rep_level) {
+  const ColumnDescriptor* d, const std::vector<typename Type::c_type>& values,
+  int num_vals, Encoding::type encoding, const uint8_t* indices, int indices_size,
+  const std::vector<int16_t>& def_levels, int16_t max_def_level,
+  const std::vector<int16_t>& rep_levels, int16_t max_rep_level) {
   int num_values = 0;
 
   auto page_stream = CreateOutputStream();
@@ -355,7 +357,7 @@ class DictionaryPageBuilder {
 
   // This class writes data and metadata to the passed inputs
   explicit DictionaryPageBuilder(const ColumnDescriptor* d)
-      : num_dict_values_(0), have_values_(false) {
+    : num_dict_values_(0), have_values_(false) {
     auto encoder = MakeTypedEncoder<TYPE>(Encoding::PLAIN, true, d);
     dict_traits_ = dynamic_cast<DictEncoder<TYPE>*>(encoder.get());
     encoder_.reset(dynamic_cast<SpecializedEncoder*>(encoder.release()));
@@ -374,7 +376,7 @@ class DictionaryPageBuilder {
 
   std::shared_ptr<Buffer> WriteDict() {
     std::shared_ptr<Buffer> dict_buffer =
-        AllocateBuffer(::arrow::default_memory_pool(), dict_traits_->dict_encoded_size());
+      AllocateBuffer(::arrow::default_memory_pool(), dict_traits_->dict_encoded_size());
     dict_traits_->WriteDict(dict_buffer->mutable_data());
     return dict_buffer;
   }
@@ -390,7 +392,7 @@ class DictionaryPageBuilder {
 
 template <>
 inline DictionaryPageBuilder<BooleanType>::DictionaryPageBuilder(
-    const ColumnDescriptor* d) {
+  const ColumnDescriptor* d) {
   ParquetException::NYI("only plain encoding currently implemented for boolean");
 }
 
@@ -402,23 +404,23 @@ inline std::shared_ptr<Buffer> DictionaryPageBuilder<BooleanType>::WriteDict() {
 
 template <>
 inline std::shared_ptr<Buffer> DictionaryPageBuilder<BooleanType>::AppendValues(
-    const std::vector<TC>& values) {
+  const std::vector<TC>& values) {
   ParquetException::NYI("only plain encoding currently implemented for boolean");
   return nullptr;
 }
 
 template <typename Type>
 inline static std::shared_ptr<DictionaryPage> MakeDictPage(
-    const ColumnDescriptor* d, const std::vector<typename Type::c_type>& values,
-    const std::vector<int>& values_per_page, Encoding::type encoding,
-    std::vector<std::shared_ptr<Buffer>>& rle_indices) {
+  const ColumnDescriptor* d, const std::vector<typename Type::c_type>& values,
+  const std::vector<int>& values_per_page, Encoding::type encoding,
+  std::vector<std::shared_ptr<Buffer>>& rle_indices) {
   test::DictionaryPageBuilder<Type> page_builder(d);
   int num_pages = static_cast<int>(values_per_page.size());
   int value_start = 0;
 
   for (int i = 0; i < num_pages; i++) {
     rle_indices.push_back(page_builder.AppendValues(
-        slice(values, value_start, value_start + values_per_page[i])));
+      slice(values, value_start, value_start + values_per_page[i])));
     value_start += values_per_page[i];
   }
 
@@ -442,7 +444,7 @@ inline static void PaginateDict(const ColumnDescriptor* d,
   int num_pages = static_cast<int>(values_per_page.size());
   std::vector<std::shared_ptr<Buffer>> rle_indices;
   std::shared_ptr<DictionaryPage> dict_page =
-      MakeDictPage<Type>(d, values, values_per_page, encoding, rle_indices);
+    MakeDictPage<Type>(d, values, values_per_page, encoding, rle_indices);
   pages.push_back(dict_page);
   int def_level_start = 0;
   int def_level_end = 0;
@@ -458,10 +460,10 @@ inline static void PaginateDict(const ColumnDescriptor* d,
       rep_level_end = (i + 1) * num_levels_per_page;
     }
     std::shared_ptr<DataPageV1> data_page = MakeDataPage<Int32Type>(
-        d, {}, values_per_page[i], encoding, rle_indices[i]->data(),
-        static_cast<int>(rle_indices[i]->size()),
-        slice(def_levels, def_level_start, def_level_end), max_def_level,
-        slice(rep_levels, rep_level_start, rep_level_end), max_rep_level);
+      d, {}, values_per_page[i], encoding, rle_indices[i]->data(),
+      static_cast<int>(rle_indices[i]->size()),
+      slice(def_levels, def_level_start, def_level_end), max_def_level,
+      slice(rep_levels, rep_level_start, rep_level_end), max_rep_level);
     pages.push_back(data_page);
   }
 }
@@ -493,10 +495,10 @@ static inline void PaginatePlain(const ColumnDescriptor* d,
       rep_level_end = (i + 1) * num_levels_per_page;
     }
     std::shared_ptr<DataPage> page = MakeDataPage<Type>(
-        d, slice(values, value_start, value_start + values_per_page[i]),
-        values_per_page[i], encoding, nullptr, 0,
-        slice(def_levels, def_level_start, def_level_end), max_def_level,
-        slice(rep_levels, rep_level_start, rep_level_end), max_rep_level);
+      d, slice(values, value_start, value_start + values_per_page[i]),
+      values_per_page[i], encoding, nullptr, 0,
+      slice(def_levels, def_level_start, def_level_end), max_def_level,
+      slice(rep_levels, rep_level_start, rep_level_end), max_rep_level);
     pages.push_back(page);
     value_start += values_per_page[i];
   }
@@ -547,7 +549,7 @@ static inline int MakePages(const ColumnDescriptor* d, int num_pages, int levels
     PaginatePlain<Type>(d, values, def_levels, max_def_level, rep_levels, max_rep_level,
                         levels_per_page, values_per_page, pages);
   } else if (encoding == Encoding::RLE_DICTIONARY ||
-             encoding == Encoding::PLAIN_DICTIONARY) {
+    encoding == Encoding::PLAIN_DICTIONARY) {
     // Calls InitValues and repeats the data
     InitDictValues<typename Type::c_type>(num_values, levels_per_page, values, buffer);
     PaginateDict<Type>(d, values, def_levels, max_def_level, rep_levels, max_rep_level,
@@ -707,4 +709,28 @@ inline void PrimitiveTypedTest<BooleanType>::GenerateData(int64_t num_values) {
 }
 
 }  // namespace test
+
+namespace seastarized::test {
+class MockPageReader : public PageReader {
+ public:
+  explicit MockPageReader(const std::vector<std::shared_ptr<Page>>& pages)
+    : pages_(pages), page_index_(0) {}
+
+  seastar::future<std::shared_ptr<Page>> NextPage() override {
+    if (page_index_ == static_cast<int>(pages_.size())) {
+      // EOS to consumer
+      return seastar::make_ready_future<std::shared_ptr<Page>>(nullptr);
+    }
+    return seastar::make_ready_future<std::shared_ptr<Page>>(pages_[page_index_++]);
+  }
+
+  // No-op
+  void set_max_page_header_size(uint32_t size) override {}
+
+ private:
+  std::vector<std::shared_ptr<Page>> pages_;
+  int page_index_;
+};
+
+}  // namespace seastarized::test
 }  // namespace parquet

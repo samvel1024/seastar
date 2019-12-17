@@ -464,6 +464,8 @@ src/parquet/arrow/io/interfaces.cc
 src/parquet/arrow/array/builder_base.cc
 src/parquet/arrow/array/builder_nested.cc
 src/parquet/parquet/column_writer.cc
+src/parquet/parquet/printer.cc
+src/parquet/parquet/io.cc
 src/parquet/arrow/util/range.h
 src/parquet/arrow/vendored/double-conversion/fixed-dtoa.h
 src/parquet/parquet/metadata.cc
@@ -583,6 +585,7 @@ include/seastar/parquet/parquet/file_reader.h
 include/seastar/parquet/parquet/encoding.h
 include/seastar/parquet/arrow/util/windows_compatibility.h
 include/seastar/parquet/parquet/io.h
+include/seastar/parquet/parquet/printer.h
 include/seastar/parquet/arrow/array/concatenate.h
 include/seastar/parquet/arrow/util/type_traits.h
 include/seastar/parquet/arrow/io/concurrency.h

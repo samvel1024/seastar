@@ -108,7 +108,7 @@ void AssertChunkedEqual(const ChunkedArray& actual, const ArrayVector& expected)
 
 void AssertBufferEqual(const Buffer& buffer, const std::vector<uint8_t>& expected) {
   ASSERT_EQ(static_cast<size_t>(buffer.size()), expected.size())
-      << "Mismatching buffer size";
+    << "Mismatching buffer size";
   const uint8_t* buffer_data = buffer.data();
   for (size_t i = 0; i < expected.size(); ++i) {
     ASSERT_EQ(buffer_data[i], expected[i]);
@@ -117,7 +117,7 @@ void AssertBufferEqual(const Buffer& buffer, const std::vector<uint8_t>& expecte
 
 void AssertBufferEqual(const Buffer& buffer, const std::string& expected) {
   ASSERT_EQ(static_cast<size_t>(buffer.size()), expected.length())
-      << "Mismatching buffer size";
+    << "Mismatching buffer size";
   const uint8_t* buffer_data = buffer.data();
   for (size_t i = 0; i < expected.size(); ++i) {
     ASSERT_EQ(buffer_data[i], expected[i]);
@@ -183,7 +183,7 @@ void CompareBatch(const RecordBatch& left, const RecordBatch& right,
            << "\nRight schema: " << right.schema()->ToString();
   }
   ASSERT_EQ(left.num_columns(), right.num_columns())
-      << left.schema()->ToString() << " result: " << right.schema()->ToString();
+    << left.schema()->ToString() << " result: " << right.schema()->ToString();
   ASSERT_EQ(left.num_rows(), right.num_rows());
   for (int i = 0; i < left.num_columns(); ++i) {
     if (!left.column(i)->Equals(right.column(i))) {

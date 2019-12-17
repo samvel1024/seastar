@@ -27,6 +27,7 @@
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/util/compression.h>
 
+#include <seastar/parquet/parquet/io.h>
 #include <seastar/parquet/parquet/encryption.h>
 #include <seastar/parquet/parquet/exception.h>
 #include <seastar/parquet/parquet/parquet_version.h>
@@ -46,7 +47,7 @@ static bool DEFAULT_USE_BUFFERED_STREAM = false;
 class PARQUET_EXPORT ReaderProperties {
  public:
   explicit ReaderProperties(MemoryPool* pool = ::arrow::default_memory_pool())
-      : pool_(pool) {
+    : pool_(pool) {
     buffered_stream_enabled_ = DEFAULT_USE_BUFFERED_STREAM;
     buffer_size_ = DEFAULT_BUFFER_SIZE;
   }
@@ -55,6 +56,10 @@ class PARQUET_EXPORT ReaderProperties {
 
   std::shared_ptr<ArrowInputStream> GetStream(std::shared_ptr<ArrowInputFile> source,
                                               int64_t start, int64_t num_bytes);
+
+  std::shared_ptr<seastarized::FutureInputStream>
+  GetStream(std::shared_ptr<seastarized::RandomAccessSource> source,
+            int64_t start, int64_t num_bytes);
 
   bool is_buffered_stream_enabled() const { return buffered_stream_enabled_; }
 
@@ -67,7 +72,7 @@ class PARQUET_EXPORT ReaderProperties {
   int64_t buffer_size() const { return buffer_size_; }
 
   void file_decryption_properties(
-      const std::shared_ptr<FileDecryptionProperties>& decryption) {
+    const std::shared_ptr<FileDecryptionProperties>& decryption) {
     file_decryption_properties_ = decryption;
   }
 
@@ -93,7 +98,7 @@ static constexpr bool DEFAULT_ARE_STATISTICS_ENABLED = true;
 static constexpr int64_t DEFAULT_MAX_STATISTICS_SIZE = 4096;
 static constexpr Encoding::type DEFAULT_ENCODING = Encoding::PLAIN;
 static constexpr ParquetVersion::type DEFAULT_WRITER_VERSION =
-    ParquetVersion::PARQUET_1_0;
+  ParquetVersion::PARQUET_1_0;
 static const char DEFAULT_CREATED_BY[] = CREATED_BY_VERSION;
 static constexpr Compression::type DEFAULT_COMPRESSION_TYPE = Compression::UNCOMPRESSED;
 
@@ -104,12 +109,12 @@ class PARQUET_EXPORT ColumnProperties {
                    bool dictionary_enabled = DEFAULT_IS_DICTIONARY_ENABLED,
                    bool statistics_enabled = DEFAULT_ARE_STATISTICS_ENABLED,
                    size_t max_stats_size = DEFAULT_MAX_STATISTICS_SIZE)
-      : encoding_(encoding),
-        codec_(codec),
-        dictionary_enabled_(dictionary_enabled),
-        statistics_enabled_(statistics_enabled),
-        max_stats_size_(max_stats_size),
-        compression_level_(Codec::UseDefaultCompressionLevel()) {}
+    : encoding_(encoding),
+      codec_(codec),
+      dictionary_enabled_(dictionary_enabled),
+      statistics_enabled_(statistics_enabled),
+      max_stats_size_(max_stats_size),
+      compression_level_(Codec::UseDefaultCompressionLevel()) {}
 
   void set_encoding(Encoding::type encoding) { encoding_ = encoding; }
 
@@ -157,13 +162,13 @@ class PARQUET_EXPORT WriterProperties {
   class Builder {
    public:
     Builder()
-        : pool_(::arrow::default_memory_pool()),
-          dictionary_pagesize_limit_(DEFAULT_DICTIONARY_PAGE_SIZE_LIMIT),
-          write_batch_size_(DEFAULT_WRITE_BATCH_SIZE),
-          max_row_group_length_(DEFAULT_MAX_ROW_GROUP_LENGTH),
-          pagesize_(kDefaultDataPageSize),
-          version_(DEFAULT_WRITER_VERSION),
-          created_by_(DEFAULT_CREATED_BY) {}
+      : pool_(::arrow::default_memory_pool()),
+        dictionary_pagesize_limit_(DEFAULT_DICTIONARY_PAGE_SIZE_LIMIT),
+        write_batch_size_(DEFAULT_WRITE_BATCH_SIZE),
+        max_row_group_length_(DEFAULT_MAX_ROW_GROUP_LENGTH),
+        pagesize_(kDefaultDataPageSize),
+        version_(DEFAULT_WRITER_VERSION),
+        created_by_(DEFAULT_CREATED_BY) {}
     virtual ~Builder() {}
 
     Builder* memory_pool(MemoryPool* pool) {
@@ -237,7 +242,7 @@ class PARQUET_EXPORT WriterProperties {
      */
     Builder* encoding(Encoding::type encoding_type) {
       if (encoding_type == Encoding::PLAIN_DICTIONARY ||
-          encoding_type == Encoding::RLE_DICTIONARY) {
+        encoding_type == Encoding::RLE_DICTIONARY) {
         throw ParquetException("Can't use dictionary encoding as fallback encoding");
       }
 
@@ -253,7 +258,7 @@ class PARQUET_EXPORT WriterProperties {
      */
     Builder* encoding(const std::string& path, Encoding::type encoding_type) {
       if (encoding_type == Encoding::PLAIN_DICTIONARY ||
-          encoding_type == Encoding::RLE_DICTIONARY) {
+        encoding_type == Encoding::RLE_DICTIONARY) {
         throw ParquetException("Can't use dictionary encoding as fallback encoding");
       }
 
@@ -342,7 +347,7 @@ class PARQUET_EXPORT WriterProperties {
     }
 
     Builder* encryption(
-        const std::shared_ptr<FileEncryptionProperties>& file_encryption_properties) {
+      const std::shared_ptr<FileEncryptionProperties>& file_encryption_properties) {
       file_encryption_properties_ = file_encryption_properties;
       return this;
     }
@@ -395,9 +400,9 @@ class PARQUET_EXPORT WriterProperties {
         get(item.first).set_statistics_enabled(item.second);
 
       return std::shared_ptr<WriterProperties>(new WriterProperties(
-          pool_, dictionary_pagesize_limit_, write_batch_size_, max_row_group_length_,
-          pagesize_, version_, created_by_, std::move(file_encryption_properties_),
-          default_column_properties_, column_properties));
+        pool_, dictionary_pagesize_limit_, write_batch_size_, max_row_group_length_,
+        pagesize_, version_, created_by_, std::move(file_encryption_properties_),
+        default_column_properties_, column_properties));
     }
 
    private:
@@ -451,7 +456,7 @@ class PARQUET_EXPORT WriterProperties {
   }
 
   const ColumnProperties& column_properties(
-      const std::shared_ptr<schema::ColumnPath>& path) const {
+    const std::shared_ptr<schema::ColumnPath>& path) const {
     auto it = column_properties_.find(path->ToDotString());
     if (it != column_properties_.end()) return it->second;
     return default_column_properties_;
@@ -486,7 +491,7 @@ class PARQUET_EXPORT WriterProperties {
   }
 
   std::shared_ptr<ColumnEncryptionProperties> column_encryption_properties(
-      const std::string& path) const {
+    const std::string& path) const {
     if (file_encryption_properties_) {
       return file_encryption_properties_->column_encryption_properties(path);
     } else {
@@ -496,22 +501,22 @@ class PARQUET_EXPORT WriterProperties {
 
  private:
   explicit WriterProperties(
-      MemoryPool* pool, int64_t dictionary_pagesize_limit, int64_t write_batch_size,
-      int64_t max_row_group_length, int64_t pagesize, ParquetVersion::type version,
-      const std::string& created_by,
-      std::shared_ptr<FileEncryptionProperties> file_encryption_properties,
-      const ColumnProperties& default_column_properties,
-      const std::unordered_map<std::string, ColumnProperties>& column_properties)
-      : pool_(pool),
-        dictionary_pagesize_limit_(dictionary_pagesize_limit),
-        write_batch_size_(write_batch_size),
-        max_row_group_length_(max_row_group_length),
-        pagesize_(pagesize),
-        parquet_version_(version),
-        parquet_created_by_(created_by),
-        file_encryption_properties_(file_encryption_properties),
-        default_column_properties_(default_column_properties),
-        column_properties_(column_properties) {}
+    MemoryPool* pool, int64_t dictionary_pagesize_limit, int64_t write_batch_size,
+    int64_t max_row_group_length, int64_t pagesize, ParquetVersion::type version,
+    const std::string& created_by,
+    std::shared_ptr<FileEncryptionProperties> file_encryption_properties,
+    const ColumnProperties& default_column_properties,
+    const std::unordered_map<std::string, ColumnProperties>& column_properties)
+    : pool_(pool),
+      dictionary_pagesize_limit_(dictionary_pagesize_limit),
+      write_batch_size_(write_batch_size),
+      max_row_group_length_(max_row_group_length),
+      pagesize_(pagesize),
+      parquet_version_(version),
+      parquet_created_by_(created_by),
+      file_encryption_properties_(file_encryption_properties),
+      default_column_properties_(default_column_properties),
+      column_properties_(column_properties) {}
 
   MemoryPool* pool_;
   int64_t dictionary_pagesize_limit_;
@@ -541,9 +546,9 @@ static constexpr int64_t kArrowDefaultBatchSize = 64 * 1024;
 class PARQUET_EXPORT ArrowReaderProperties {
  public:
   explicit ArrowReaderProperties(bool use_threads = kArrowDefaultUseThreads)
-      : use_threads_(use_threads),
-        read_dict_indices_(),
-        batch_size_(kArrowDefaultBatchSize) {}
+    : use_threads_(use_threads),
+      read_dict_indices_(),
+      batch_size_(kArrowDefaultBatchSize) {}
 
   void set_use_threads(bool use_threads) { use_threads_ = use_threads; }
 
@@ -583,11 +588,11 @@ class PARQUET_EXPORT ArrowWriterProperties {
   class Builder {
    public:
     Builder()
-        : write_timestamps_as_int96_(false),
-          coerce_timestamps_enabled_(false),
-          coerce_timestamps_unit_(::arrow::TimeUnit::SECOND),
-          truncated_timestamps_allowed_(false),
-          store_schema_(false) {}
+      : write_timestamps_as_int96_(false),
+        coerce_timestamps_enabled_(false),
+        coerce_timestamps_unit_(::arrow::TimeUnit::SECOND),
+        truncated_timestamps_allowed_(false),
+        store_schema_(false) {}
     virtual ~Builder() {}
 
     Builder* disable_deprecated_int96_timestamps() {
@@ -626,8 +631,8 @@ class PARQUET_EXPORT ArrowWriterProperties {
 
     std::shared_ptr<ArrowWriterProperties> build() {
       return std::shared_ptr<ArrowWriterProperties>(new ArrowWriterProperties(
-          write_timestamps_as_int96_, coerce_timestamps_enabled_, coerce_timestamps_unit_,
-          truncated_timestamps_allowed_, store_schema_));
+        write_timestamps_as_int96_, coerce_timestamps_enabled_, coerce_timestamps_unit_,
+        truncated_timestamps_allowed_, store_schema_));
     }
 
    private:
@@ -656,11 +661,11 @@ class PARQUET_EXPORT ArrowWriterProperties {
                                  bool coerce_timestamps_enabled,
                                  ::arrow::TimeUnit::type coerce_timestamps_unit,
                                  bool truncated_timestamps_allowed, bool store_schema)
-      : write_timestamps_as_int96_(write_nanos_as_int96),
-        coerce_timestamps_enabled_(coerce_timestamps_enabled),
-        coerce_timestamps_unit_(coerce_timestamps_unit),
-        truncated_timestamps_allowed_(truncated_timestamps_allowed),
-        store_schema_(store_schema) {}
+    : write_timestamps_as_int96_(write_nanos_as_int96),
+      coerce_timestamps_enabled_(coerce_timestamps_enabled),
+      coerce_timestamps_unit_(coerce_timestamps_unit),
+      truncated_timestamps_allowed_(truncated_timestamps_allowed),
+      store_schema_(store_schema) {}
 
   const bool write_timestamps_as_int96_;
   const bool coerce_timestamps_enabled_;
@@ -673,10 +678,10 @@ class PARQUET_EXPORT ArrowWriterProperties {
 /// column chunk. API possibly not stable
 struct ArrowWriteContext {
   ArrowWriteContext(MemoryPool* memory_pool, ArrowWriterProperties* properties)
-      : memory_pool(memory_pool),
-        properties(properties),
-        data_buffer(AllocateBuffer(memory_pool)),
-        def_levels_buffer(AllocateBuffer(memory_pool)) {}
+    : memory_pool(memory_pool),
+      properties(properties),
+      data_buffer(AllocateBuffer(memory_pool)),
+      def_levels_buffer(AllocateBuffer(memory_pool)) {}
 
   template <typename T>
   ::arrow::Status GetScratchData(const int64_t num_values, T** out) {
