@@ -18,6 +18,7 @@
 #include <seastar/parquet/arrow/array.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -26,21 +27,16 @@
 #include <utility>
 
 #include <seastar/parquet/arrow/buffer.h>
-#include "parquet/arrow/buffer_builder.h"
-#include <seastar/parquet/arrow/compare.h>
-#include "parquet/arrow/extension_type.h"
-#include "parquet/arrow/pretty_print.h"
+#include <seastar/parquet/arrow/buffer_builder.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/type_traits.h>
-#include "parquet/arrow/util/atomic_shared_ptr.h"
 #include <seastar/parquet/arrow/util/bit_util.h>
 #include <seastar/parquet/arrow/util/checked_cast.h>
-#include "parquet/arrow/util/decimal.h"
 #include <seastar/parquet/arrow/util/logging.h>
 #include <seastar/parquet/arrow/util/macros.h>
 #include <seastar/parquet/arrow/visitor.h>
-#include "parquet/arrow/visitor_inline.h"
+#include <seastar/parquet/arrow/visitor_inline.h>
 
 namespace arrow {
 
@@ -119,61 +115,6 @@ int64_t ArrayData::GetNullCount() const {
 
 int64_t Array::null_count() const { return data_->GetNullCount(); }
 
-std::string Array::Diff(const Array& other) const {
-  std::stringstream diff;
-  ARROW_IGNORE_EXPR(Equals(other, EqualOptions().diff_sink(&diff)));
-  return diff.str();
-}
-
-bool Array::Equals(const Array& arr, const EqualOptions& opts) const {
-  return ArrayEquals(*this, arr, opts);
-}
-
-bool Array::Equals(const std::shared_ptr<Array>& arr, const EqualOptions& opts) const {
-  if (!arr) {
-    return false;
-  }
-  return Equals(*arr, opts);
-}
-
-bool Array::ApproxEquals(const Array& arr, const EqualOptions& opts) const {
-  return ArrayApproxEquals(*this, arr, opts);
-}
-
-bool Array::ApproxEquals(const std::shared_ptr<Array>& arr,
-                         const EqualOptions& opts) const {
-  if (!arr) {
-    return false;
-  }
-  return ApproxEquals(*arr, opts);
-}
-
-bool Array::RangeEquals(const Array& other, int64_t start_idx, int64_t end_idx,
-                        int64_t other_start_idx) const {
-  return ArrayRangeEquals(*this, other, start_idx, end_idx, other_start_idx);
-}
-
-bool Array::RangeEquals(const std::shared_ptr<Array>& other, int64_t start_idx,
-                        int64_t end_idx, int64_t other_start_idx) const {
-  if (!other) {
-    return false;
-  }
-  return ArrayRangeEquals(*this, *other, start_idx, end_idx, other_start_idx);
-}
-
-bool Array::RangeEquals(int64_t start_idx, int64_t end_idx, int64_t other_start_idx,
-                        const Array& other) const {
-  return ArrayRangeEquals(*this, other, start_idx, end_idx, other_start_idx);
-}
-
-bool Array::RangeEquals(int64_t start_idx, int64_t end_idx, int64_t other_start_idx,
-                        const std::shared_ptr<Array>& other) const {
-  if (!other) {
-    return false;
-  }
-  return ArrayRangeEquals(*this, *other, start_idx, end_idx, other_start_idx);
-}
-
 std::shared_ptr<Array> Array::Slice(int64_t offset, int64_t length) const {
   return MakeArray(std::make_shared<ArrayData>(data_->Slice(offset, length)));
 }
@@ -181,12 +122,6 @@ std::shared_ptr<Array> Array::Slice(int64_t offset, int64_t length) const {
 std::shared_ptr<Array> Array::Slice(int64_t offset) const {
   int64_t slice_length = data_->length - offset;
   return Slice(offset, slice_length);
-}
-
-std::string Array::ToString() const {
-  std::stringstream ss;
-  ARROW_CHECK_OK(PrettyPrint(*this, 0, &ss));
-  return ss.str();
 }
 
 // ----------------------------------------------------------------------
@@ -544,20 +479,6 @@ DayTimeIntervalType::DayMilliseconds DayTimeIntervalArray::GetValue(int64_t i) c
 }
 
 // ----------------------------------------------------------------------
-// Decimal
-
-Decimal128Array::Decimal128Array(const std::shared_ptr<ArrayData>& data)
-    : FixedSizeBinaryArray(data) {
-  ARROW_CHECK_EQ(data->type->id(), Type::DECIMAL);
-}
-
-std::string Decimal128Array::FormatValue(int64_t i) const {
-  const auto& type_ = checked_cast<const Decimal128Type&>(*type());
-  const Decimal128 value(GetValue(i));
-  return value.ToString(type_.scale());
-}
-
-// ----------------------------------------------------------------------
 // Struct
 
 StructArray::StructArray(const std::shared_ptr<ArrayData>& data) {
@@ -621,7 +542,7 @@ const StructType* StructArray::struct_type() const {
 }
 
 std::shared_ptr<Array> StructArray::field(int i) const {
-  std::shared_ptr<Array> result = internal::atomic_load(&boxed_fields_[i]);
+  std::shared_ptr<Array> result = std::atomic_load(&boxed_fields_[i]);
   if (!result) {
     std::shared_ptr<ArrayData> field_data;
     if (data_->offset != 0 || data_->child_data[i]->length != data_->length) {
@@ -631,7 +552,7 @@ std::shared_ptr<Array> StructArray::field(int i) const {
       field_data = data_->child_data[i];
     }
     result = MakeArray(field_data);
-    internal::atomic_store(&boxed_fields_[i], result);
+    std::atomic_store(&boxed_fields_[i], result);
   }
   return result;
 }
@@ -804,7 +725,7 @@ Status UnionArray::MakeSparse(const Array& type_ids,
 }
 
 std::shared_ptr<Array> UnionArray::child(int i) const {
-  std::shared_ptr<Array> result = internal::atomic_load(&boxed_fields_[i]);
+  std::shared_ptr<Array> result = std::atomic_load(&boxed_fields_[i]);
   if (!result) {
     std::shared_ptr<ArrayData> child_data = data_->child_data[i]->Copy();
     if (mode() == UnionMode::SPARSE) {
@@ -816,7 +737,7 @@ std::shared_ptr<Array> UnionArray::child(int i) const {
       }
     }
     result = MakeArray(child_data);
-    internal::atomic_store(&boxed_fields_[i], result);
+    std::atomic_store(&boxed_fields_[i], result);
   }
   return result;
 }
@@ -923,19 +844,6 @@ Status DictionaryArray::FromArrays(const std::shared_ptr<DataType>& type,
   RETURN_NOT_OK(is_valid);
   *out = std::make_shared<DictionaryArray>(type, indices, dictionary);
   return Status::OK();
-}
-
-bool DictionaryArray::CanCompareIndices(const DictionaryArray& other) const {
-  DCHECK(dictionary()->type()->Equals(other.dictionary()->type()))
-      << "dictionaries have differing type " << *dictionary()->type() << " vs "
-      << *other.dictionary()->type();
-
-  if (!indices()->type()->Equals(other.indices()->type())) {
-    return false;
-  }
-
-  auto min_length = std::min(dictionary()->length(), other.dictionary()->length());
-  return dictionary()->RangeEquals(other.dictionary(), 0, min_length, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -1168,16 +1076,6 @@ struct ValidateVisitor {
     return Status::OK();
   }
 
-  Status Visit(const Decimal128Array& array) {
-    if (array.data()->buffers.size() != 2) {
-      return Status::Invalid("number of buffers was != 2");
-    }
-    if (array.length() > 0 && array.values() == nullptr) {
-      return Status::Invalid("values was null");
-    }
-    return Status::OK();
-  }
-
   Status Visit(const BinaryArray& array) {
     if (array.data()->buffers.size() != 3) {
       return Status::Invalid("number of buffers was != 3");
@@ -1291,17 +1189,6 @@ struct ValidateVisitor {
       return Status::Invalid("Dictionary values must be non-null");
     }
     return Status::OK();
-  }
-
-  Status Visit(const ExtensionArray& array) {
-    const auto& ext_type = checked_cast<const ExtensionType&>(*array.type());
-
-    if (!array.storage()->type()->Equals(*ext_type.storage_type())) {
-      return Status::Invalid("Extension array of type '", array.type()->ToString(),
-                             "' has storage array of incompatible type '",
-                             array.storage()->type()->ToString(), "'");
-    }
-    return array.storage()->Validate();
   }
 
  protected:
@@ -1422,11 +1309,6 @@ class ArrayDataWrapper {
     return Status::OK();
   }
 
-  Status Visit(const ExtensionType& type) {
-    *out_ = type.MakeArray(data_);
-    return Status::OK();
-  }
-
   const std::shared_ptr<ArrayData>& data_;
   std::shared_ptr<Array>* out_;
 };
@@ -1507,11 +1389,6 @@ class NullArrayFactory {
     Status Visit(const DictionaryType& type) {
       RETURN_NOT_OK(MaxOf(GetBufferLength(type.value_type(), length_)));
       return MaxOf(GetBufferLength(type.index_type(), length_));
-    }
-
-    Status Visit(const ExtensionType& type) {
-      // XXX is an extension array's length always == storage length
-      return MaxOf(GetBufferLength(type.storage_type(), length_));
     }
 
     Status Visit(const DataType& type) {
@@ -1623,94 +1500,6 @@ class NullArrayFactory {
   std::shared_ptr<Buffer> buffer_;
 };
 
-class RepeatedArrayFactory {
- public:
-  RepeatedArrayFactory(MemoryPool* pool, const Scalar& scalar, int64_t length,
-                       std::shared_ptr<Array>* out)
-      : pool_(pool), scalar_(scalar), length_(length), out_(out) {}
-
-  Status Create() { return VisitTypeInline(*scalar_.type, this); }
-
-  Status Visit(const NullType&) { return Status::OK(); }
-
-  Status Visit(const BooleanType&) {
-    std::shared_ptr<Buffer> buffer;
-    RETURN_NOT_OK(AllocateBitmap(pool_, length_, &buffer));
-    BitUtil::SetBitsTo(buffer->mutable_data(), 0, length_,
-                       checked_cast<const BooleanScalar&>(scalar_).value);
-    *out_ = std::make_shared<BooleanArray>(length_, buffer);
-    return Status::OK();
-  }
-
-  template <typename T>
-  enable_if_number<T, Status> Visit(const T&) {
-    auto value = checked_cast<const typename TypeTraits<T>::ScalarType&>(scalar_).value;
-    return FinishFixedWidth(&value, sizeof(value));
-  }
-
-  template <typename T>
-  enable_if_base_binary<T, Status> Visit(const T&) {
-    std::shared_ptr<Buffer> value =
-        checked_cast<const typename TypeTraits<T>::ScalarType&>(scalar_).value;
-    std::shared_ptr<Buffer> values_buffer, offsets_buffer;
-    RETURN_NOT_OK(CreateBufferOf(value->data(), value->size(), &values_buffer));
-    auto size = static_cast<typename T::offset_type>(value->size());
-    RETURN_NOT_OK(CreateOffsetsBuffer(size, &offsets_buffer));
-    *out_ = std::make_shared<typename TypeTraits<T>::ArrayType>(length_, offsets_buffer,
-                                                                values_buffer);
-    return Status::OK();
-  }
-
-  Status Visit(const FixedSizeBinaryType&) {
-    std::shared_ptr<Buffer> value =
-        checked_cast<const FixedSizeBinaryScalar&>(scalar_).value;
-    return FinishFixedWidth(value->data(), value->size());
-  }
-
-  Status Visit(const Decimal128Type&) {
-    auto value = checked_cast<const Decimal128Scalar&>(scalar_).value.ToBytes();
-    return FinishFixedWidth(value.data(), value.size());
-  }
-
-  Status Visit(const DataType& type) {
-    return Status::NotImplemented("construction from scalar of type ", *scalar_.type);
-  }
-
-  template <typename OffsetType>
-  Status CreateOffsetsBuffer(OffsetType value_length, std::shared_ptr<Buffer>* out) {
-    TypedBufferBuilder<OffsetType> builder(pool_);
-    RETURN_NOT_OK(builder.Resize(length_ + 1));
-    OffsetType offset = 0;
-    for (int64_t i = 0; i < length_ + 1; ++i, offset += value_length) {
-      builder.UnsafeAppend(offset);
-    }
-    return builder.Finish(out);
-  }
-
-  Status CreateBufferOf(const void* data, size_t data_length,
-                        std::shared_ptr<Buffer>* out) {
-    BufferBuilder builder(pool_);
-    RETURN_NOT_OK(builder.Resize(length_ * data_length));
-    for (int64_t i = 0; i < length_; ++i) {
-      builder.UnsafeAppend(data, data_length);
-    }
-    return builder.Finish(out);
-  }
-
-  Status FinishFixedWidth(const void* data, size_t data_length) {
-    std::shared_ptr<Buffer> buffer;
-    RETURN_NOT_OK(CreateBufferOf(data, data_length, &buffer));
-    *out_ = MakeArray(
-        ArrayData::Make(scalar_.type, length_, {nullptr, std::move(buffer)}, 0));
-    return Status::OK();
-  }
-
-  MemoryPool* pool_;
-  const Scalar& scalar_;
-  int64_t length_;
-  std::shared_ptr<Array>* out_;
-};
-
 }  // namespace internal
 
 Status MakeArrayOfNull(MemoryPool* pool, const std::shared_ptr<DataType>& type,
@@ -1724,19 +1513,6 @@ Status MakeArrayOfNull(MemoryPool* pool, const std::shared_ptr<DataType>& type,
 Status MakeArrayOfNull(const std::shared_ptr<DataType>& type, int64_t length,
                        std::shared_ptr<Array>* out) {
   return MakeArrayOfNull(default_memory_pool(), type, length, out);
-}
-
-Status MakeArrayFromScalar(MemoryPool* pool, const Scalar& scalar, int64_t length,
-                           std::shared_ptr<Array>* out) {
-  if (!scalar.is_valid) {
-    return MakeArrayOfNull(pool, scalar.type, length, out);
-  }
-  return internal::RepeatedArrayFactory(pool, scalar, length, out).Create();
-}
-
-Status MakeArrayFromScalar(const Scalar& scalar, int64_t length,
-                           std::shared_ptr<Array>* out) {
-  return MakeArrayFromScalar(default_memory_pool(), scalar, length, out);
 }
 
 namespace internal {

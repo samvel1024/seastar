@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/util/compression_snappy.h"
+#include <seastar/parquet/arrow/util/compression_snappy.h>
 
 #include <cstddef>
 #include <cstdint>

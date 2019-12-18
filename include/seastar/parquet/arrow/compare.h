@@ -30,9 +30,6 @@ namespace arrow {
 
 class Array;
 class DataType;
-class Tensor;
-class SparseTensor;
-struct Scalar;
 
 static constexpr double kDefaultAbsoluteTolerance = 1E-5;
 
@@ -82,12 +79,6 @@ class EqualOptions {
 bool ARROW_EXPORT ArrayEquals(const Array& left, const Array& right,
                               const EqualOptions& = EqualOptions::Defaults());
 
-bool ARROW_EXPORT TensorEquals(const Tensor& left, const Tensor& right,
-                               const EqualOptions& = EqualOptions::Defaults());
-
-/// EXPERIMENTAL: Returns true if the given sparse tensors are exactly equal
-bool ARROW_EXPORT SparseTensorEquals(const SparseTensor& left, const SparseTensor& right);
-
 /// Returns true if the arrays are approximately equal. For non-floating point
 /// types, this is equivalent to ArrayEquals(left, right)
 bool ARROW_EXPORT ArrayApproxEquals(const Array& left, const Array& right,
@@ -105,11 +96,6 @@ bool ARROW_EXPORT ArrayRangeEquals(const Array& left, const Array& right,
 /// fields
 bool ARROW_EXPORT TypeEquals(const DataType& left, const DataType& right,
                              bool check_metadata = true);
-
-/// Returns true if scalars are equal
-/// \param[in] left a Scalar
-/// \param[in] right a Scalar
-bool ARROW_EXPORT ScalarEquals(const Scalar& left, const Scalar& right);
 
 }  // namespace arrow
 

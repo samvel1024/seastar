@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/builder.h"
+#include <seastar/parquet/arrow/builder.h>
 
 #include <string>
 #include <utility>
@@ -24,8 +24,8 @@
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/util/checked_cast.h>
-#include "parquet/arrow/util/hashing.h"
-#include "parquet/arrow/visitor_inline.h"
+#include <seastar/parquet/arrow/util/hashing.h>
+#include <seastar/parquet/arrow/visitor_inline.h>
 
 namespace arrow {
 
@@ -110,7 +110,6 @@ Status MakeBuilder(MemoryPool* pool, const std::shared_ptr<DataType>& type,
       BUILDER_CASE(LARGE_STRING, LargeStringBuilder);
       BUILDER_CASE(LARGE_BINARY, LargeBinaryBuilder);
       BUILDER_CASE(FIXED_SIZE_BINARY, FixedSizeBinaryBuilder);
-      BUILDER_CASE(DECIMAL, Decimal128Builder);
 
     case Type::DICTIONARY: {
       const auto& dict_type = static_cast<const DictionaryType&>(*type);

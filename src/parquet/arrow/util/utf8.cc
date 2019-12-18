@@ -22,8 +22,8 @@
 #include <utility>
 
 #include <seastar/parquet/arrow/util/logging.h>
-#include "parquet/arrow/util/utf8.h"
-#include "parquet/arrow/vendored/utf8cpp/checked.h"
+#include <seastar/parquet/arrow/util/utf8.h>
+#include <seastar/parquet/arrow/vendored/utf8cpp/checked.h>
 
 namespace arrow {
 namespace util {

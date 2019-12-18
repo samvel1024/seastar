@@ -36,7 +36,7 @@
 #include <seastar/parquet/arrow/array.h>
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/status.h>
-#include "parquet/arrow/util/align_util.h"
+#include <seastar/parquet/arrow/util/align_util.h>
 #include <seastar/parquet/arrow/util/bit_util.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
@@ -337,10 +337,6 @@ std::string Bitmap::ToString() const {
 
 std::shared_ptr<BooleanArray> Bitmap::ToArray() const {
   return std::make_shared<BooleanArray>(length_, buffer_, nullptr, 0, offset_);
-}
-
-std::string Bitmap::Diff(const Bitmap& other) const {
-  return ToArray()->Diff(*other.ToArray());
 }
 
 bool Bitmap::Equals(const Bitmap& other) const {

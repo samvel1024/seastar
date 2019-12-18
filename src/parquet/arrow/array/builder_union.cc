@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/array/builder_union.h"
+#include <seastar/parquet/arrow/array/builder_union.h>
 
 #include <limits>
 #include <utility>

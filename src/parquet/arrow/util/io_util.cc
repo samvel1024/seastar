@@ -22,8 +22,6 @@
 
 #define _FILE_OFFSET_BITS 64
 
-#include <seastar/parquet/arrow/util/windows_compatibility.h>  // IWYU pragma: keep
-
 #include <algorithm>
 #include <cerrno>
 #include <cstdint>
@@ -53,21 +51,10 @@
 // ----------------------------------------------------------------------
 // file compatibility stuff
 
-#ifdef _WIN32
-#include <io.h>
-#include <share.h>
-#else  // POSIX-like platforms
 #include <dirent.h>
-#endif
 
-#ifdef _WIN32
-#include "parquet/arrow/io/mman.h"
-#undef Realloc
-#undef Free
-#else  // POSIX-like platforms
 #include <sys/mman.h>
 #include <unistd.h>
-#endif
 
 // define max read/write count
 #ifdef _WIN32
@@ -85,12 +72,12 @@
 #endif
 
 #include <seastar/parquet/arrow/buffer.h>
-#include "parquet/arrow/util/io_util.h"
+#include <seastar/parquet/arrow/util/io_util.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
 // For filename conversion
 #if defined(_WIN32)
-#include "parquet/arrow/util/utf8.h"
+#include <seastar/parquet/arrow/util/utf8.h>
 #endif
 
 namespace arrow {
@@ -927,9 +914,6 @@ Status CreatePipe(int fd[2]) {
 }
 
 static Status StatusFromErrno(const char* prefix) {
-#ifdef _WIN32
-  errno = __map_mman_error(GetLastError(), EPERM);
-#endif
   return Status::IOError(prefix, ErrnoMessage(errno));
 }
 
@@ -941,53 +925,6 @@ Status MemoryMapRemap(void* addr, size_t old_size, size_t new_size, int fildes,
                       void** new_addr) {
   // should only be called with writable files
   *new_addr = MAP_FAILED;
-#ifdef _WIN32
-  // flags are ignored on windows
-  HANDLE fm, h;
-
-  if (!UnmapViewOfFile(addr)) {
-    return StatusFromErrno("UnmapViewOfFile failed: ");
-  }
-
-  h = reinterpret_cast<HANDLE>(_get_osfhandle(fildes));
-  if (h == INVALID_HANDLE_VALUE) {
-    return StatusFromErrno("Cannot get file handle: ");
-  }
-
-  uint64_t new_size64 = new_size;
-  LONG new_size_low = static_cast<LONG>(new_size64 & 0xFFFFFFFFUL);
-  LONG new_size_high = static_cast<LONG>((new_size64 >> 32) & 0xFFFFFFFFUL);
-
-  SetFilePointer(h, new_size_low, &new_size_high, FILE_BEGIN);
-  SetEndOfFile(h);
-  fm = CreateFileMapping(h, NULL, PAGE_READWRITE, 0, 0, "");
-  if (fm == NULL) {
-    return StatusFromErrno("CreateFileMapping failed: ");
-  }
-  *new_addr = MapViewOfFile(fm, FILE_MAP_WRITE, 0, 0, new_size);
-  CloseHandle(fm);
-  if (new_addr == NULL) {
-    return StatusFromErrno("MapViewOfFile failed: ");
-  }
-  return Status::OK();
-#else
-#ifdef __APPLE__
-  // we have to close the mmap first, truncate the file to the new size
-  // and recreate the mmap
-  if (munmap(addr, old_size) == -1) {
-    return StatusFromErrno("munmap failed: ");
-  }
-  if (ftruncate(fildes, new_size) == -1) {
-    return StatusFromErrno("ftruncate failed: ");
-  }
-  // we set READ / WRITE flags on the new map, since we could only have
-  // unlarged a RW map in the first place
-  *new_addr = mmap(NULL, new_size, PROT_READ | PROT_WRITE, MAP_SHARED, fildes, 0);
-  if (*new_addr == MAP_FAILED) {
-    return StatusFromErrno("mmap failed: ");
-  }
-  return Status::OK();
-#else
   if (ftruncate(fildes, new_size) == -1) {
     return StatusFromErrno("ftruncate failed: ");
   }
@@ -996,8 +933,6 @@ Status MemoryMapRemap(void* addr, size_t old_size, size_t new_size, int fildes,
     return StatusFromErrno("mremap failed: ");
   }
   return Status::OK();
-#endif
-#endif
 }
 
 //

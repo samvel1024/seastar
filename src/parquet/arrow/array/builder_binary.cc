@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/array/builder_binary.h"
+#include <seastar/parquet/arrow/array/builder_binary.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -33,7 +33,6 @@
 #include <seastar/parquet/arrow/type_traits.h>
 #include <seastar/parquet/arrow/util/bit_util.h>
 #include <seastar/parquet/arrow/util/checked_cast.h>
-#include "parquet/arrow/util/decimal.h"
 #include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {

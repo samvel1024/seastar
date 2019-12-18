@@ -156,8 +156,6 @@ typedef testing::Types<UInt8Type, UInt16Type, UInt32Type, UInt64Type, Int8Type, 
 
 class Array;
 class ChunkedArray;
-class RecordBatch;
-class Table;
 
 namespace compute {
 struct Datum;
@@ -169,7 +167,6 @@ using ArrayVector = std::vector<std::shared_ptr<Array>>;
 
 #define ASSERT_ARRAYS_EQUAL(lhs, rhs) AssertArraysEqual((lhs), (rhs))
 #define ASSERT_BATCHES_EQUAL(lhs, rhs) AssertBatchesEqual((lhs), (rhs))
-#define ASSERT_TABLES_EQUAL(lhs, rhs) AssertTablesEqual((lhs), (rhs))
 
 // If verbose is true, then the arrays will be pretty printed
 ARROW_EXPORT void AssertArraysEqual(const Array& expected, const Array& actual,
@@ -185,9 +182,6 @@ ARROW_EXPORT void AssertBufferEqual(const Buffer& buffer,
 ARROW_EXPORT void AssertBufferEqual(const Buffer& buffer, const std::string& expected);
 ARROW_EXPORT void AssertBufferEqual(const Buffer& buffer, const Buffer& expected);
 ARROW_EXPORT void AssertSchemaEqual(const Schema& lhs, const Schema& rhs);
-
-ARROW_EXPORT void AssertTablesEqual(const Table& expected, const Table& actual,
-                                    bool same_chunk_layout = true, bool flatten = false);
 
 ARROW_EXPORT void AssertDatumsEqual(const Datum& expected, const Datum& actual);
 
@@ -234,10 +228,6 @@ ARROW_EXPORT std::shared_ptr<RecordBatch> RecordBatchFromJSON(
 ARROW_EXPORT
   std::shared_ptr<ChunkedArray> ChunkedArrayFromJSON(const std::shared_ptr<DataType>&,
                                                      const std::vector<std::string>& json);
-
-ARROW_EXPORT
-  std::shared_ptr<Table> TableFromJSON(const std::shared_ptr<Schema>&,
-                                       const std::vector<std::string>& json);
 
 // ArrayFromVector: construct an Array from vectors of C values
 

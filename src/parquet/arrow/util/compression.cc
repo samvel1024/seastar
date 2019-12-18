@@ -22,27 +22,27 @@
 #include <string>
 
 #ifdef ARROW_WITH_BROTLI
-#include "parquet/arrow/util/compression_brotli.h"
+#include <seastar/parquet/arrow/util/compression_brotli.h>
 #endif
 
 #ifdef ARROW_WITH_SNAPPY
-#include "parquet/arrow/util/compression_snappy.h"
+#include <seastar/parquet/arrow/util/compression_snappy.h>
 #endif
 
 #ifdef ARROW_WITH_LZ4
-#include "parquet/arrow/util/compression_lz4.h"
+#include <seastar/parquet/arrow/util/compression_lz4.h>
 #endif
 
 #ifdef ARROW_WITH_ZLIB
-#include "parquet/arrow/util/compression_zlib.h"
+#include <seastar/parquet/arrow/util/compression_zlib.h>
 #endif
 
 #ifdef ARROW_WITH_ZSTD
-#include "parquet/arrow/util/compression_zstd.h"
+#include <seastar/parquet/arrow/util/compression_zstd.h>
 #endif
 
 #ifdef ARROW_WITH_BZ2
-#include "parquet/arrow/util/compression_bz2.h"
+#include <seastar/parquet/arrow/util/compression_bz2.h>
 #endif
 
 #include <seastar/parquet/arrow/status.h>

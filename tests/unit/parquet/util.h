@@ -30,7 +30,6 @@
 
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/builder.h>
-#include <seastar/parquet/arrow/record_batch.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/type_fwd.h>
 #include <seastar/parquet/arrow/util/macros.h>
@@ -42,7 +41,6 @@ namespace arrow {
 class Array;
 class ChunkedArray;
 class MemoryPool;
-class RecordBatch;
 class Table;
 
 using ArrayVector = std::vector<std::shared_ptr<Array>>;
@@ -99,32 +97,6 @@ Status MakeArray(const std::vector<uint8_t>& valid_bytes, const std::vector<T>& 
 #define DECL_T() typedef typename TestFixture::T T;
 
 #define DECL_TYPE() typedef typename TestFixture::Type Type;
-
-// ----------------------------------------------------------------------
-// A RecordBatchReader for serving a sequence of in-memory record batches
-
-class BatchIterator : public RecordBatchReader {
- public:
-  BatchIterator(const std::shared_ptr<Schema>& schema,
-                const std::vector<std::shared_ptr<RecordBatch>>& batches)
-      : schema_(schema), batches_(batches), position_(0) {}
-
-  std::shared_ptr<Schema> schema() const override { return schema_; }
-
-  Status ReadNext(std::shared_ptr<RecordBatch>* out) override {
-    if (position_ >= batches_.size()) {
-      *out = nullptr;
-    } else {
-      *out = batches_[position_++];
-    }
-    return Status::OK();
-  }
-
- private:
-  std::shared_ptr<Schema> schema_;
-  std::vector<std::shared_ptr<RecordBatch>> batches_;
-  size_t position_;
-};
 
 template <typename Fn>
 struct VisitBuilderImpl {

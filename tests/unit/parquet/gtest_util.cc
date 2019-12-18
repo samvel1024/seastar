@@ -37,74 +37,12 @@
 
 #include <seastar/parquet/arrow/array.h>
 #include <seastar/parquet/arrow/buffer.h>
-#include <seastar/parquet/arrow/compute/kernel.h>
-#include <seastar/parquet/arrow/pretty_print.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/table.h>
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
-
-static void PrintChunkedArray(const ChunkedArray& carr, std::stringstream* ss) {
-  for (int i = 0; i < carr.num_chunks(); ++i) {
-    auto c1 = carr.chunk(i);
-    *ss << "Chunk " << i << std::endl;
-    ::arrow::PrettyPrintOptions options(/*indent=*/2);
-    ARROW_EXPECT_OK(::arrow::PrettyPrint(*c1, options, ss));
-    *ss << std::endl;
-  }
-}
-
-template <typename T>
-void AssertTsEqual(const T& expected, const T& actual) {
-  if (!expected.Equals(actual)) {
-    std::stringstream pp_expected;
-    std::stringstream pp_actual;
-    ::arrow::PrettyPrintOptions options(/*indent=*/2);
-    options.window = 50;
-    ARROW_EXPECT_OK(PrettyPrint(expected, options, &pp_expected));
-    ARROW_EXPECT_OK(PrettyPrint(actual, options, &pp_actual));
-    FAIL() << "Got: \n" << pp_actual.str() << "\nExpected: \n" << pp_expected.str();
-  }
-}
-
-void AssertArraysEqual(const Array& expected, const Array& actual, bool verbose) {
-  std::stringstream diff;
-  if (!expected.Equals(actual, EqualOptions().diff_sink(&diff))) {
-    if (verbose) {
-      ::arrow::PrettyPrintOptions options(/*indent=*/2);
-      options.window = 50;
-      diff << "Expected:\n";
-      ARROW_EXPECT_OK(PrettyPrint(expected, options, &diff));
-      diff << "\nActual:\n";
-      ARROW_EXPECT_OK(PrettyPrint(actual, options, &diff));
-    }
-    FAIL() << diff.str();
-  }
-}
-
-void AssertBatchesEqual(const RecordBatch& expected, const RecordBatch& actual) {
-  AssertTsEqual(expected, actual);
-}
-
-void AssertChunkedEqual(const ChunkedArray& expected, const ChunkedArray& actual) {
-  ASSERT_EQ(expected.num_chunks(), actual.num_chunks()) << "# chunks unequal";
-  if (!actual.Equals(expected)) {
-    std::stringstream diff;
-    for (int i = 0; i < actual.num_chunks(); ++i) {
-      auto c1 = actual.chunk(i);
-      auto c2 = expected.chunk(i);
-      diff << "# chunk " << i << std::endl;
-      ARROW_IGNORE_EXPR(c1->Equals(c2, EqualOptions().diff_sink(&diff)));
-    }
-    FAIL() << diff.str();
-  }
-}
-
-void AssertChunkedEqual(const ChunkedArray& actual, const ArrayVector& expected) {
-  AssertChunkedEqual(ChunkedArray(expected, actual.type()), actual);
-}
 
 void AssertBufferEqual(const Buffer& buffer, const std::vector<uint8_t>& expected) {
   ASSERT_EQ(static_cast<size_t>(buffer.size()), expected.size())
@@ -135,66 +73,6 @@ void AssertSchemaEqual(const Schema& lhs, const Schema& rhs) {
     ss << "left schema: " << lhs.ToString() << std::endl
        << "right schema: " << rhs.ToString() << std::endl;
     FAIL() << ss.str();
-  }
-}
-
-void AssertDatumsEqual(const Datum& expected, const Datum& actual) {
-  // TODO: Implements better print.
-  ASSERT_TRUE(actual.Equals(expected));
-}
-
-void AssertTablesEqual(const Table& expected, const Table& actual, bool same_chunk_layout,
-                       bool combine_chunks) {
-  ASSERT_EQ(expected.num_columns(), actual.num_columns());
-
-  if (combine_chunks) {
-    auto pool = default_memory_pool();
-    std::shared_ptr<Table> new_expected, new_actual;
-    ASSERT_OK(expected.CombineChunks(pool, &new_expected));
-    ASSERT_OK(actual.CombineChunks(pool, &new_actual));
-
-    AssertTablesEqual(*new_expected, *new_actual, false, false);
-    return;
-  }
-
-  if (same_chunk_layout) {
-    for (int i = 0; i < actual.num_columns(); ++i) {
-      AssertChunkedEqual(*expected.column(i), *actual.column(i));
-    }
-  } else {
-    std::stringstream ss;
-    if (!actual.Equals(expected)) {
-      for (int i = 0; i < expected.num_columns(); ++i) {
-        ss << "Actual column " << i << std::endl;
-        PrintChunkedArray(*actual.column(i), &ss);
-
-        ss << "Expected column " << i << std::endl;
-        PrintChunkedArray(*expected.column(i), &ss);
-      }
-      FAIL() << ss.str();
-    }
-  }
-}
-
-void CompareBatch(const RecordBatch& left, const RecordBatch& right,
-                  bool compare_metadata) {
-  if (!left.schema()->Equals(*right.schema(), compare_metadata)) {
-    FAIL() << "Left schema: " << left.schema()->ToString()
-           << "\nRight schema: " << right.schema()->ToString();
-  }
-  ASSERT_EQ(left.num_columns(), right.num_columns())
-    << left.schema()->ToString() << " result: " << right.schema()->ToString();
-  ASSERT_EQ(left.num_rows(), right.num_rows());
-  for (int i = 0; i < left.num_columns(); ++i) {
-    if (!left.column(i)->Equals(right.column(i))) {
-      std::stringstream ss;
-      ss << "Idx: " << i << " Name: " << left.column_name(i);
-      ss << std::endl << "Left: ";
-      ASSERT_OK(PrettyPrint(*left.column(i), 0, &ss));
-      ss << std::endl << "Right: ";
-      ASSERT_OK(PrettyPrint(*right.column(i), 0, &ss));
-      FAIL() << ss.str();
-    }
   }
 }
 

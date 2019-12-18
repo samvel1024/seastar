@@ -26,13 +26,12 @@
 #include <vector>
 
 #include <seastar/parquet/arrow/array.h>
-#include "parquet/arrow/builder.h"
-#include "parquet/arrow/stl.h"
-#include "parquet/arrow/util/bit_stream_utils.h"
+#include <seastar/parquet/arrow/builder.h>
+#include <seastar/parquet/arrow/util/bit_stream_utils.h>
 #include <seastar/parquet/arrow/util/checked_cast.h>
-#include "parquet/arrow/util/hashing.h"
+#include <seastar/parquet/arrow/util/hashing.h>
 #include <seastar/parquet/arrow/util/logging.h>
-#include "parquet/arrow/util/rle_encoding.h"
+#include <seastar/parquet/arrow/util/rle_encoding.h>
 #include <seastar/parquet/arrow/util/ubsan.h>
 
 #include <seastar/parquet/parquet/exception.h>
@@ -44,7 +43,7 @@ using arrow::Status;
 using arrow::internal::checked_cast;
 
 template <typename T>
-using ArrowPoolVector = std::vector<T, ::arrow::stl::allocator<T>>;
+using ArrowPoolVector = std::vector<T>;
 
 namespace parquet {
 
@@ -463,7 +462,6 @@ class DictEncoderImpl : public EncoderImpl, virtual public DictEncoder<DType> {
 
   explicit DictEncoderImpl(const ColumnDescriptor* desc, MemoryPool* pool)
       : EncoderImpl(desc, Encoding::PLAIN_DICTIONARY, pool),
-        buffered_indices_(::arrow::stl::allocator<int32_t>(pool)),
         dict_encoded_size_(0),
         memo_table_(pool, kInitialHashTableSize) {}
 
@@ -2154,7 +2152,7 @@ class DeltaLengthByteArrayDecoder : public DecoderImpl,
   int Decode(ByteArray* buffer, int max_values) override {
     using VectorT = ArrowPoolVector<int>;
     max_values = std::min(max_values, num_values_);
-    VectorT lengths(max_values, 0, ::arrow::stl::allocator<int>(pool_));
+    VectorT lengths(max_values, 0);
     len_decoder_.Decode(lengths.data(), max_values);
     for (int i = 0; i < max_values; ++i) {
       buffer[i].len = lengths[i];

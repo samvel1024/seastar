@@ -15,20 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <seastar/parquet/arrow/util/windows_compatibility.h>  // IWYU pragma: keep
-
 // sys/mman.h not present in Visual Studio or Cygwin
-#ifdef _WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include "parquet/arrow/io/mman.h"
-#undef Realloc
-#undef Free
-#else
 #include <sys/mman.h>
 #include <unistd.h>  // IWYU pragma: keep
-#endif
 
 #include <algorithm>
 #include <atomic>
@@ -45,12 +34,12 @@
 
 #include <seastar/parquet/arrow/io/file.h>
 #include <seastar/parquet/arrow/io/interfaces.h>
-#include "parquet/arrow/io/util_internal.h"
+#include <seastar/parquet/arrow/io/util_internal.h>
 
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/memory_pool.h>
 #include <seastar/parquet/arrow/status.h>
-#include "parquet/arrow/util/io_util.h"
+#include <seastar/parquet/arrow/util/io_util.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {

@@ -35,7 +35,7 @@
 #include <seastar/parquet/arrow/util/key_value_metadata.h>
 #include <seastar/parquet/arrow/util/logging.h>
 #include <seastar/parquet/arrow/util/stl.h>
-#include "parquet/arrow/visitor_inline.h"
+#include <seastar/parquet/arrow/visitor_inline.h>
 
 namespace arrow {
 

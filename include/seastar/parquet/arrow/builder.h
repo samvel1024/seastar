@@ -22,7 +22,6 @@
 #include <seastar/parquet/arrow/array/builder_adaptive.h>   // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_base.h>       // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_binary.h>     // IWYU pragma: export
-#include <seastar/parquet/arrow/array/builder_decimal.h>    // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_dict.h>       // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_nested.h>     // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_primitive.h>  // IWYU pragma: export

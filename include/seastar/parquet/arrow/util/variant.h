@@ -18,17 +18,17 @@
 #ifndef ARROW_UTIL_VARIANT_H
 #define ARROW_UTIL_VARIANT_H
 
-#include <seastar/parquet/arrow/vendored/variant.hpp>  // IWYU pragma: export
+#include <variant>  // IWYU pragma: export
 
 namespace arrow {
 namespace util {
 
-using ::mpark::bad_variant_access;
-using ::mpark::get;
-using ::mpark::get_if;
-using ::mpark::holds_alternative;
-using ::mpark::variant;
-using ::mpark::visit;
+using ::std::bad_variant_access;
+using ::std::get;
+using ::std::get_if;
+using ::std::holds_alternative;
+using ::std::variant;
+using ::std::visit;
 
 }  // namespace util
 }  // namespace arrow

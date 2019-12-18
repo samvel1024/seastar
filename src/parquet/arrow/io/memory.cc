@@ -23,12 +23,11 @@
 #include <mutex>
 
 #include <seastar/parquet/arrow/buffer.h>
-#include "parquet/arrow/io/util_internal.h"
+#include <seastar/parquet/arrow/io/util_internal.h>
 #include <seastar/parquet/arrow/memory_pool.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/util/logging.h>
 #include <seastar/parquet/arrow/util/macros.h>
-#include <seastar/parquet/arrow/util/memory.h>
 
 namespace arrow {
 namespace io {
@@ -151,7 +150,6 @@ Status MockOutputStream::Write(const void* data, int64_t nbytes) {
 // ----------------------------------------------------------------------
 // In-memory buffer writer
 
-static constexpr int kMemcopyDefaultNumThreads = 1;
 static constexpr int64_t kMemcopyDefaultBlocksize = 64;
 static constexpr int64_t kMemcopyDefaultThreshold = 1024 * 1024;
 
@@ -162,7 +160,6 @@ class FixedSizeBufferWriter::FixedSizeBufferWriterImpl {
   /// Input buffer must be mutable, will abort if not
   explicit FixedSizeBufferWriterImpl(const std::shared_ptr<Buffer>& buffer)
       : is_open_(true),
-        memcopy_num_threads_(kMemcopyDefaultNumThreads),
         memcopy_blocksize_(kMemcopyDefaultBlocksize),
         memcopy_threshold_(kMemcopyDefaultThreshold) {
     buffer_ = buffer;
@@ -196,13 +193,7 @@ class FixedSizeBufferWriter::FixedSizeBufferWriterImpl {
     if (position_ + nbytes > size_) {
       return Status::IOError("Write out of bounds");
     }
-    if (nbytes > memcopy_threshold_ && memcopy_num_threads_ > 1) {
-      ::arrow::internal::parallel_memcopy(mutable_data_ + position_,
-                                          reinterpret_cast<const uint8_t*>(data), nbytes,
-                                          memcopy_blocksize_, memcopy_num_threads_);
-    } else {
-      memcpy(mutable_data_ + position_, data, nbytes);
-    }
+    memcpy(mutable_data_ + position_, data, nbytes);
     position_ += nbytes;
     return Status::OK();
   }
@@ -212,8 +203,6 @@ class FixedSizeBufferWriter::FixedSizeBufferWriterImpl {
     RETURN_NOT_OK(Seek(position));
     return Write(data, nbytes);
   }
-
-  void set_memcopy_threads(int num_threads) { memcopy_num_threads_ = num_threads; }
 
   void set_memcopy_blocksize(int64_t blocksize) { memcopy_blocksize_ = blocksize; }
 
@@ -227,7 +216,6 @@ class FixedSizeBufferWriter::FixedSizeBufferWriterImpl {
   int64_t position_;
   bool is_open_;
 
-  int memcopy_num_threads_;
   int64_t memcopy_blocksize_;
   int64_t memcopy_threshold_;
 };
@@ -254,10 +242,6 @@ Status FixedSizeBufferWriter::Write(const void* data, int64_t nbytes) {
 Status FixedSizeBufferWriter::WriteAt(int64_t position, const void* data,
                                       int64_t nbytes) {
   return impl_->WriteAt(position, data, nbytes);
-}
-
-void FixedSizeBufferWriter::set_memcopy_threads(int num_threads) {
-  impl_->set_memcopy_threads(num_threads);
 }
 
 void FixedSizeBufferWriter::set_memcopy_blocksize(int64_t blocksize) {

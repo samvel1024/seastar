@@ -244,23 +244,6 @@ ARROW_EXPORT
 Status MakeArrayOfNull(MemoryPool* pool, const std::shared_ptr<DataType>& type,
                        int64_t length, std::shared_ptr<Array>* out);
 
-/// \brief Create an Array instance whose slots are the given scalar
-/// \param[in] scalar the value with which to fill the array
-/// \param[in] length the array length
-/// \param[out] out resulting Array instance
-ARROW_EXPORT
-Status MakeArrayFromScalar(const Scalar& scalar, int64_t length,
-                           std::shared_ptr<Array>* out);
-
-/// \brief Create a strongly-typed Array instance with all elements null
-/// \param[in] pool the pool from which memory for this array will be allocated
-/// \param[in] scalar the value with which to fill the array
-/// \param[in] length the array length
-/// \param[out] out resulting Array instance
-ARROW_EXPORT
-Status MakeArrayFromScalar(MemoryPool* pool, const Scalar& scalar, int64_t length,
-                           std::shared_ptr<Array>* out);
-
 // ----------------------------------------------------------------------
 // User array accessor types
 
@@ -320,33 +303,9 @@ class ARROW_EXPORT Array {
   /// This buffer does not account for any slice offset
   const uint8_t* null_bitmap_data() const { return null_bitmap_data_; }
 
-  /// Equality comparison with another array
-  bool Equals(const Array& arr, const EqualOptions& = EqualOptions::Defaults()) const;
-  bool Equals(const std::shared_ptr<Array>& arr,
-              const EqualOptions& = EqualOptions::Defaults()) const;
-
   /// \brief Return the formatted unified diff of arrow::Diff between this
   /// Array and another Array
   std::string Diff(const Array& other) const;
-
-  /// Approximate equality comparison with another array
-  ///
-  /// epsilon is only used if this is FloatArray or DoubleArray
-  bool ApproxEquals(const std::shared_ptr<Array>& arr,
-                    const EqualOptions& = EqualOptions::Defaults()) const;
-  bool ApproxEquals(const Array& arr,
-                    const EqualOptions& = EqualOptions::Defaults()) const;
-
-  /// Compare if the range of slots specified are equal for the given array and
-  /// this array.  end_idx exclusive.  This methods does not bounds check.
-  bool RangeEquals(int64_t start_idx, int64_t end_idx, int64_t other_start_idx,
-                   const Array& other) const;
-  bool RangeEquals(int64_t start_idx, int64_t end_idx, int64_t other_start_idx,
-                   const std::shared_ptr<Array>& other) const;
-  bool RangeEquals(const Array& other, int64_t start_idx, int64_t end_idx,
-                   int64_t other_start_idx) const;
-  bool RangeEquals(const std::shared_ptr<Array>& other, int64_t start_idx,
-                   int64_t end_idx, int64_t other_start_idx) const;
 
   Status Accept(ArrayVisitor* visitor) const;
 
@@ -920,25 +879,6 @@ class ARROW_EXPORT DayTimeIntervalArray : public PrimitiveArray {
 };
 
 // ----------------------------------------------------------------------
-// Decimal128Array
-
-/// Concrete Array class for 128-bit decimal data
-class ARROW_EXPORT Decimal128Array : public FixedSizeBinaryArray {
- public:
-  using TypeClass = Decimal128Type;
-
-  using FixedSizeBinaryArray::FixedSizeBinaryArray;
-
-  /// \brief Construct Decimal128Array from ArrayData instance
-  explicit Decimal128Array(const std::shared_ptr<ArrayData>& data);
-
-  std::string FormatValue(int64_t i) const;
-};
-
-// Backward compatibility
-using DecimalArray = Decimal128Array;
-
-// ----------------------------------------------------------------------
 // Struct
 
 /// Concrete Array class for struct data
@@ -1258,9 +1198,6 @@ class ARROW_EXPORT DictionaryArray : public Array {
   Status Transpose(MemoryPool* pool, const std::shared_ptr<DataType>& type,
                    const std::shared_ptr<Array>& dictionary, const int32_t* transpose_map,
                    std::shared_ptr<Array>* out) const;
-
-  /// \brief Determine whether dictionary arrays may be compared without unification
-  bool CanCompareIndices(const DictionaryArray& other) const;
 
   /// \brief Return the dictionary for this array, which is stored as
   /// a member of the ArrayData internal structure

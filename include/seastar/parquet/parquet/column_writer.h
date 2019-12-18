@@ -30,8 +30,6 @@
 
 namespace arrow {
 
-class Array;
-
 namespace BitUtil {
 class BitWriter;
 }  // namespace BitUtil
@@ -141,13 +139,6 @@ class PARQUET_EXPORT ColumnWriter {
 
   /// \brief The file-level writer properties
   virtual const WriterProperties* properties() = 0;
-
-  /// \brief Write Apache Arrow columnar data directly to ColumnWriter. Returns
-  /// error status if the array data type is not compatible with the concrete
-  /// writer type
-  virtual ::arrow::Status WriteArrow(const int16_t* def_levels, const int16_t* rep_levels,
-                                     int64_t num_levels, const ::arrow::Array& array,
-                                     ArrowWriteContext* ctx) = 0;
 };
 
 // API to write values to a single column. This is the main client facing API.

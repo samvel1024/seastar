@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/array/builder_nested.h"
+#include <seastar/parquet/arrow/array/builder_nested.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -29,7 +29,7 @@
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/type_traits.h>
 #include <seastar/parquet/arrow/util/bit_util.h>
-#include "parquet/arrow/util/int_util.h"
+#include <seastar/parquet/arrow/util/int_util.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {

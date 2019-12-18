@@ -21,16 +21,15 @@
 
 #include <cstdint>
 #include <string>
-
-#include <seastar/parquet/arrow/vendored/string_view.hpp>  // IWYU pragma: export
+#include <string_view>
 
 namespace arrow {
 namespace util {
 
-using nonstd::string_view;
+using ::std::string_view;
 
-template <class Char, class Traits = std::char_traits<Char>>
-using basic_string_view = nonstd::basic_string_view<Char, Traits>;
+template <class Char, class Traits = ::std::char_traits<Char>>
+using basic_string_view = ::std::basic_string_view<Char, Traits>;
 
 using bytes_view = basic_string_view<uint8_t>;
 

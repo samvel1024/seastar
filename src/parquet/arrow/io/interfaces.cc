@@ -27,9 +27,8 @@
 
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/io/concurrency.h>
-#include "parquet/arrow/io/util_internal.h"
+#include <seastar/parquet/arrow/io/util_internal.h>
 #include <seastar/parquet/arrow/status.h>
-#include "parquet/arrow/util/iterator.h"
 #include <seastar/parquet/arrow/util/logging.h>
 #include <seastar/parquet/arrow/util/string_view.h>
 
@@ -76,16 +75,6 @@ Status InputStream::Peek(int64_t ARROW_ARG_UNUSED(nbytes),
 }
 
 bool InputStream::supports_zero_copy() const { return false; }
-
-Status MakeInputStreamIterator(std::shared_ptr<InputStream> stream, int64_t block_size,
-                               Iterator<std::shared_ptr<Buffer>>* out) {
-  if (stream->closed()) {
-    return Status::Invalid("Cannot take iterator on closed stream");
-  }
-  DCHECK_GT(block_size, 0);
-  *out = Iterator<std::shared_ptr<Buffer>>(InputStreamBlockIterator(stream, block_size));
-  return Status::OK();
-}
 
 struct RandomAccessFile::RandomAccessFileImpl {
   std::mutex lock_;

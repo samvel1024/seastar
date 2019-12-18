@@ -30,14 +30,14 @@
 #include <seastar/core/thread.hh>
 
 #include <seastar/parquet/arrow/array.h>
-#include "parquet/arrow/builder.h"
+#include <seastar/parquet/arrow/builder.h>
 #include <seastar/parquet/arrow/table.h>
 #include <seastar/parquet/arrow/type.h>
-#include "parquet/arrow/util/bit_stream_utils.h"
+#include <seastar/parquet/arrow/util/bit_stream_utils.h>
 #include <seastar/parquet/arrow/util/checked_cast.h>
 #include <seastar/parquet/arrow/util/compression.h>
 #include <seastar/parquet/arrow/util/logging.h>
-#include "parquet/arrow/util/rle_encoding.h"
+#include <seastar/parquet/arrow/util/rle_encoding.h>
 
 #include <seastar/parquet/parquet/column_page.h>
 #include <seastar/parquet/parquet/encoding.h>

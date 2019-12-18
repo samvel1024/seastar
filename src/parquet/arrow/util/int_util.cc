@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/util/int_util.h"
+#include <seastar/parquet/arrow/util/int_util.h>
 
 #include <algorithm>
 #include <cstring>

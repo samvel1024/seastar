@@ -21,8 +21,6 @@
 #define ARROW_VISITOR_INLINE_H
 
 #include <seastar/parquet/arrow/array.h>
-#include <seastar/parquet/arrow/extension_type.h>
-#include <seastar/parquet/arrow/scalar.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/util/bit_util.h>
@@ -62,7 +60,6 @@ namespace arrow {
   ACTION(Timestamp);                            \
   ACTION(Time32);                               \
   ACTION(Time64);                               \
-  ACTION(Decimal128);                           \
   ACTION(List);                                 \
   ACTION(LargeList);                            \
   ACTION(Map);                                  \
@@ -70,7 +67,6 @@ namespace arrow {
   ACTION(Struct);                               \
   ACTION(Union);                                \
   ACTION(Dictionary);                           \
-  ACTION(Extension)
 
 #define TYPE_VISIT_INLINE(TYPE_CLASS) \
   case TYPE_CLASS##Type::type_id:     \
@@ -265,34 +261,6 @@ struct ArrayDataVisitor<T, enable_if_fixed_size_binary<T>> {
     return Status::OK();
   }
 };
-
-#define SCALAR_VISIT_INLINE(TYPE_CLASS) \
-  case TYPE_CLASS##Type::type_id:       \
-    return visitor->Visit(internal::checked_cast<const TYPE_CLASS##Scalar&>(scalar));
-
-template <typename VISITOR>
-inline Status VisitScalarInline(const Scalar& scalar, VISITOR* visitor) {
-  switch (scalar.type->id()) {
-    ARROW_GENERATE_FOR_ALL_TYPES(SCALAR_VISIT_INLINE);
-    case Type::INTERVAL: {
-      const auto& interval_type =
-          internal::checked_cast<const IntervalType&>(*scalar.type);
-      if (interval_type.interval_type() == IntervalType::MONTHS) {
-        return visitor->Visit(internal::checked_cast<const MonthIntervalScalar&>(scalar));
-      }
-      if (interval_type.interval_type() == IntervalType::DAY_TIME) {
-        return visitor->Visit(
-            internal::checked_cast<const DayTimeIntervalScalar&>(scalar));
-      }
-    }
-    default:
-      break;
-  }
-  return Status::NotImplemented("Scalar visitor for type not implemented ",
-                                scalar.type->ToString());
-}
-
-#undef TYPE_VISIT_INLINE
 
 }  // namespace arrow
 

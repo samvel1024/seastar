@@ -24,6 +24,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <iterator>
 
 #include <seastar/parquet/parquet/platform.h>
 

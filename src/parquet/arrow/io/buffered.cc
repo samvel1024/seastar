@@ -24,7 +24,7 @@
 #include <utility>
 
 #include <seastar/parquet/arrow/buffer.h>
-#include "parquet/arrow/io/util_internal.h"
+#include <seastar/parquet/arrow/io/util_internal.h>
 #include <seastar/parquet/arrow/memory_pool.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/util/logging.h>

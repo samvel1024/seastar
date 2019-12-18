@@ -15,22 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <seastar/parquet/arrow/util/string_builder.h>
+// Workaround https://github.com/Cyan4973/xxHash/issues/249
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4146)
+#endif
 
-#include <sstream>
-#include <memory>
+#include <seastar/parquet/arrow/vendored/xxhash/xxhash.h>
 
-namespace arrow {
-namespace util {
-namespace detail {
-
-StringStreamWrapper::StringStreamWrapper()
-    : sstream_(std::make_unique<std::ostringstream>()), ostream_(*sstream_) {}
-
-StringStreamWrapper::~StringStreamWrapper() {}
-
-std::string StringStreamWrapper::str() { return sstream_->str(); }
-
-}  // namespace detail
-}  // namespace util
-}  // namespace arrow
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif

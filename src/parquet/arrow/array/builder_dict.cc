@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "parquet/arrow/array/builder_dict.h"
+#include <seastar/parquet/arrow/array/builder_dict.h>
 
 #include <cstdint>
 #include <limits>
@@ -24,15 +24,15 @@
 #include <vector>
 
 #include <seastar/parquet/arrow/array.h>
-#include "parquet/arrow/array/dict_internal.h"
+#include <seastar/parquet/arrow/array/dict_internal.h>
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/type_traits.h>
 #include <seastar/parquet/arrow/util/checked_cast.h>
-#include "parquet/arrow/util/hashing.h"
+#include <seastar/parquet/arrow/util/hashing.h>
 #include <seastar/parquet/arrow/util/logging.h>
-#include "parquet/arrow/visitor_inline.h"
+#include <seastar/parquet/arrow/visitor_inline.h>
 
 namespace arrow {
 
