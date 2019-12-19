@@ -391,7 +391,7 @@ include(ExternalProject)
 #TODO [PQ] Below definitions have nothing to do with macros in the code, this is only for ArrowBuild.cmake to work somewhat properly
 set(ARROW_WITH_SNAPPY ON)
 set(ARROW_WITH_THRIFT ON)
-set(ARROW_USE_OPEN_SSL ON)
+set(ARROW_USE_OPENSSL ON)
 set(PARQUET_REQUIRE_ENCRYPTION ON)
 set(THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake/arrow_build)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ArrowBuild.cmake)
