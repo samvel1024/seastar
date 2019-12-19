@@ -1509,6 +1509,7 @@ class SerializedPageReader : public PageReader {
   void UpdateDecryption(const std::shared_ptr<Decryptor>& decryptor, int8_t module_type,
                         const std::string& page_aad);
   void InitDecryption();
+  seastar::future<bool> ReadHeader(std::shared_ptr<uint32_t> header_size, std::shared_ptr<uint32_t> allowed_page_size);
   std::shared_ptr<FutureInputStream> stream_;
 
   format::PageHeader current_page_header_;
@@ -1580,319 +1581,169 @@ void SerializedPageReader::UpdateDecryption(const std::shared_ptr<Decryptor>& de
   }
 }
 
-#if 1
-seastar::future<std::shared_ptr<Page>> SerializedPageReader::NextPage() {
-  // Loop here because there may be unhandled page types that we skip until
-  // finding a page that we do know what to do with
+seastar::future<bool> SerializedPageReader::ReadHeader(std::shared_ptr<uint32_t> header_size, std::shared_ptr<uint32_t> allowed_page_size) {
+  // Page headers can be very large because of page statistics
+  // We try to deserialize a larger buffer progressively
+  // until a maximum allowed header limit
+  std::shared_ptr<bool> okHeader = std::make_shared<bool>(false);
 
-  return seastar::async([this] () -> std::shared_ptr<Page> {
-    while (seen_num_rows_ < total_num_rows_) {
-      uint32_t header_size = 0;
-      uint32_t allowed_page_size = kDefaultPageHeaderSize;
-
-      // Page headers can be very large because of page statistics
-      // We try to deserialize a larger buffer progressively
-      // until a maximum allowed header limit
-      while (true) {
-        string_view buffer;
-        stream_->Peek(allowed_page_size, &buffer).get0();
-        if (buffer.size() == 0) {
-          return std::shared_ptr<Page>(nullptr);
-        }
-
-        // This gets used, then set by DeserializeThriftMsg
-        header_size = static_cast<uint32_t>(buffer.size());
-        try {
-          if (crypto_ctx_.meta_decryptor != nullptr) {
-            UpdateDecryption(crypto_ctx_.meta_decryptor, encryption::kDictionaryPageHeader,
-                             data_page_header_aad_);
-          }
-          DeserializeThriftMsg(reinterpret_cast<const uint8_t*>(buffer.data()),
-                               &header_size, &current_page_header_,
-                               crypto_ctx_.meta_decryptor);
-          break;
-        } catch (std::exception& e) {
-          // Failed to deserialize. Double the allowed page header size and try again
-          std::stringstream ss;
-          ss << e.what();
-          allowed_page_size *= 2;
-          if (allowed_page_size > max_page_header_size_) {
-            ss << "Deserializing page header failed.\n";
-            throw ParquetException(ss.str());
-          }
-        }
+  return seastar::repeat([this, okHeader, header_size, allowed_page_size]() mutable {
+    std::shared_ptr<string_view> buffer = std::make_shared<string_view>("");
+    return stream_->Peek(*allowed_page_size, buffer.get()).then([=](int readBytes) mutable {
+      if (buffer->size() == 0) {
+        return seastar::stop_iteration::yes;
       }
-      // Advance the stream offset
-      stream_->Advance(header_size).get0();
-
-      int compressed_len = current_page_header_.compressed_page_size;
-      int uncompressed_len = current_page_header_.uncompressed_page_size;
-      if (crypto_ctx_.data_decryptor != nullptr) {
-        UpdateDecryption(crypto_ctx_.data_decryptor, encryption::kDictionaryPage,
-                         data_page_aad_);
-      }
-      // Read the compressed data page.
-      std::shared_ptr<Buffer> page_buffer;
-      stream_->Read(compressed_len, &page_buffer).get0();
-      if (page_buffer->size() != compressed_len) {
+      // This gets used, then set by DeserializeThriftMsg
+      *header_size = static_cast<uint32_t>(buffer->size());
+      try {
+        if (crypto_ctx_.meta_decryptor != nullptr) {
+          UpdateDecryption(crypto_ctx_.meta_decryptor, encryption::kDictionaryPageHeader,
+                           data_page_header_aad_);
+        }
+        DeserializeThriftMsg(reinterpret_cast<const uint8_t*>(buffer->data()),
+                             header_size.get(), &current_page_header_,
+                             crypto_ctx_.meta_decryptor);
+        *okHeader = true;
+        return seastar::stop_iteration::yes;
+      } catch (std::exception& e) {
+        // Failed to deserialize. Double the allowed page header size and try again
         std::stringstream ss;
-        ss << "Page was smaller (" << page_buffer->size() << ") than expected ("
-           << compressed_len << ")";
-        ParquetException::EofException(ss.str());
-      }
-
-      // Decrypt it if we need to
-      if (crypto_ctx_.data_decryptor != nullptr) {
-        PARQUET_THROW_NOT_OK(decryption_buffer_->Resize(
-          compressed_len - crypto_ctx_.data_decryptor->CiphertextSizeDelta()));
-        compressed_len = crypto_ctx_.data_decryptor->Decrypt(
-          page_buffer->data(), compressed_len, decryption_buffer_->mutable_data());
-
-        page_buffer = decryption_buffer_;
-      }
-      // Uncompress it if we need to
-      if (decompressor_ != nullptr) {
-        // Grow the uncompressed buffer if we need to.
-        if (uncompressed_len > static_cast<int>(decompression_buffer_->size())) {
-          PARQUET_THROW_NOT_OK(decompression_buffer_->Resize(uncompressed_len, false));
+        ss << e.what();
+        *allowed_page_size *= 2;
+        if (*allowed_page_size > max_page_header_size_) {
+          ss << "Deserializing page header failed.\n";
+          throw ParquetException(ss.str());
         }
-        PARQUET_THROW_NOT_OK(
-          decompressor_->Decompress(compressed_len, page_buffer->data(), uncompressed_len,
-                                    decompression_buffer_->mutable_data()));
-        page_buffer = decompression_buffer_;
       }
-
-      if (current_page_header_.type == format::PageType::DICTIONARY_PAGE) {
-        crypto_ctx_.start_decrypt_with_dictionary_page = false;
-        const format::DictionaryPageHeader& dict_header =
-          current_page_header_.dictionary_page_header;
-
-        bool is_sorted = dict_header.__isset.is_sorted ? dict_header.is_sorted : false;
-
-        return std::make_shared<DictionaryPage>(page_buffer, dict_header.num_values,
-                                                FromThrift(dict_header.encoding),
-                                                is_sorted);
-      } else if (current_page_header_.type == format::PageType::DATA_PAGE) {
-        ++page_ordinal_;
-        const format::DataPageHeader& header = current_page_header_.data_page_header;
-
-        EncodedStatistics page_statistics;
-        if (header.__isset.statistics) {
-          const format::Statistics& stats = header.statistics;
-          if (stats.__isset.max) {
-            page_statistics.set_max(stats.max);
-          }
-          if (stats.__isset.min) {
-            page_statistics.set_min(stats.min);
-          }
-          if (stats.__isset.null_count) {
-            page_statistics.set_null_count(stats.null_count);
-          }
-          if (stats.__isset.distinct_count) {
-            page_statistics.set_distinct_count(stats.distinct_count);
-          }
-        }
-
-        seen_num_rows_ += header.num_values;
-
-        return std::make_shared<DataPageV1>(
-          page_buffer, header.num_values, FromThrift(header.encoding),
-          FromThrift(header.definition_level_encoding),
-          FromThrift(header.repetition_level_encoding), page_statistics);
-      } else if (current_page_header_.type == format::PageType::DATA_PAGE_V2) {
-        ++page_ordinal_;
-        const format::DataPageHeaderV2& header = current_page_header_.data_page_header_v2;
-        bool is_compressed = header.__isset.is_compressed ? header.is_compressed : false;
-
-        seen_num_rows_ += header.num_values;
-
-        return std::make_shared<DataPageV2>(
-          page_buffer, header.num_values, header.num_nulls, header.num_rows,
-          FromThrift(header.encoding), header.definition_levels_byte_length,
-          header.repetition_levels_byte_length, is_compressed);
-      } else {
-        // We don't know what this page type is. We're allowed to skip non-data
-        // pages.
-        continue;
-      }
-    }
-    return std::shared_ptr<Page>(nullptr);
+      return seastar::stop_iteration::no;
+    });
+  }).then([okHeader]() {
+    return *okHeader;
   });
 }
-#endif
 
-#if 0
 seastar::future<std::shared_ptr<Page>> SerializedPageReader::NextPage() {
-  bool break_loops = false;
-  uint32_t header_size = 0, allowed_page_size = kDefaultPageHeaderSize;
-  string_view buffer;
-  std::shared_ptr<Buffer> page_buffer;
-  std::shared_ptr<Page> retval(nullptr);
-
-  if (seen_num_rows_ >= total_num_rows_) {
-    return seastar::make_ready_future < std::shared_ptr < Page >> (retval);
-  }
-
   // Loop here because there may be unhandled page types that we skip until
   // finding a page that we do know what to do with
-  return seastar::do_with(std::move(break_loops), std::move(header_size), std::move(allowed_page_size),
-      std::move(buffer), std::move(page_buffer), std::move(retval),
-      [this](auto &break_loops, auto &header_size, auto &allowed_page_size, auto &buffer, auto &page_buffer, auto &retval) {
-        return seastar::do_until(
-          [&retval, &break_loops, this] {
-            return !break_loops && retval.get() == nullptr && seen_num_rows_ < total_num_rows_;
-            },
-            [&, this] {
-              header_size = 0;
-              allowed_page_size = kDefaultPageHeaderSize;
-              return seastar::do_until(
-                [&break_loops, &retval] {
-                  return !break_loops && retval.get() == nullptr;
-                  },
-                  [&, this] {
-                    return stream_->Peek(allowed_page_size, &buffer).then(
-                      [&, this](int64_t read_bytes) {
-                        if (read_bytes == 0) {
-                          break_loops = true;
-                          return seastar::make_ready_future<>();
-                        }
-                        header_size = static_cast<uint32_t>(read_bytes);
-                        try {
-                          if (crypto_ctx_.meta_decryptor != nullptr) {
-                            UpdateDecryption(crypto_ctx_.meta_decryptor, encryption::kDictionaryPageHeader,
-                                data_page_header_aad_);
-                          }
-                          DeserializeThriftMsg(reinterpret_cast<const uint8_t *>(buffer.data()),
-                              &header_size, &current_page_header_,
-                              crypto_ctx_.meta_decryptor);
-                          return seastar::make_ready_future<>();
-                        } catch (std::exception &e) {
-                          // Failed to deserialize. Double the allowed page header size and try again
-                          std::stringstream ss;
-                          ss << e.what();
-                          allowed_page_size *= 2;
-                          if (allowed_page_size > max_page_header_size_) {
-                            ss << "Deserializing page header failed.\n";
-                            // todo: is it propagated back to do_until's return value?
-                            return seastar::make_exception_future<>(ParquetException(ss.str()));
-                          }
-                          return seastar::make_ready_future<>();
-                        }
-                      }
-                    );
-                  }
-                ).then(
-                  [&, this] {
-                    return stream_->Advance(header_size).then(
-                      [&, this] {
-                        int compressed_len = current_page_header_.compressed_page_size;
-                        int uncompressed_len = current_page_header_.uncompressed_page_size;
-                        if (crypto_ctx_.data_decryptor != nullptr) {
-                          UpdateDecryption(crypto_ctx_.data_decryptor, encryption::kDictionaryPage,
-                              data_page_aad_);
-                        }
-                        // Read the compressed data page.
-                        std::shared_ptr<Buffer> page_buffer;
-                        return stream_->Read(compressed_len, &page_buffer).then(
-                          [&, this, compressed_len, uncompressed_len, page_buffer] (int64_t read_bytes) mutable {
-                            if (page_buffer->size() != compressed_len) {
-                              std::stringstream ss;
-                              ss << "Page was smaller (" << page_buffer->size() << ") than expected ("
-                              << compressed_len << ")";
-                              ParquetException::EofException(ss.str());
-                            }
-                            // Decrypt it if we need to
-                            if (crypto_ctx_.data_decryptor != nullptr) {
-                              PARQUET_THROW_NOT_OK(decryption_buffer_->Resize(
-                                  compressed_len - crypto_ctx_.data_decryptor->CiphertextSizeDelta()));
-                              compressed_len = crypto_ctx_.data_decryptor->Decrypt(
-                                  page_buffer->data(), compressed_len, decryption_buffer_->mutable_data());
+  std::shared_ptr<std::shared_ptr<Page>> page =
+      std::make_shared<std::shared_ptr<Page>>(std::shared_ptr<Page>(nullptr));
 
-                              page_buffer = decryption_buffer_;
-                            }
-                            // Uncompress it if we need to
-                            if (decompressor_ != nullptr) {
-                              // Grow the uncompressed buffer if we need to.
-                              if (uncompressed_len > static_cast<int>(decompression_buffer_->size())) {
-                                PARQUET_THROW_NOT_OK(decompression_buffer_->Resize(uncompressed_len, false));
-                              }
-                              PARQUET_THROW_NOT_OK(
-                                decompressor_->Decompress(compressed_len, page_buffer->data(), uncompressed_len,
-                                    decompression_buffer_->mutable_data()));
-                              page_buffer = decompression_buffer_;
-                            }
-                            if (current_page_header_.type == format::PageType::DICTIONARY_PAGE) {
-                              crypto_ctx_.start_decrypt_with_dictionary_page = false;
-                              const format::DictionaryPageHeader &dict_header =
-                                current_page_header_.dictionary_page_header;
+  return seastar::repeat([this, page]() mutable {
+    if (seen_num_rows_ >= total_num_rows_) {
+      return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+    }
 
-                              bool is_sorted = dict_header.__isset.is_sorted ? dict_header.is_sorted : false;
+    std::shared_ptr<uint32_t> header_size = std::make_shared<uint32_t>(0);
+    std::shared_ptr<uint32_t> allowed_page_size = std::make_shared<uint32_t>(kDefaultPageHeaderSize);
 
-                              retval = std::make_shared<DictionaryPage>(page_buffer, dict_header.num_values,
-                                  FromThrift(dict_header.encoding),
-                                  is_sorted);
-                              return seastar::make_ready_future<>();
-                            } else if (current_page_header_.type == format::PageType::DATA_PAGE) {
-                              ++page_ordinal_;
-                              const format::DataPageHeader &header = current_page_header_.data_page_header;
+    return ReadHeader(header_size, allowed_page_size).then([this, header_size = std::move(header_size), page](bool okHeader) mutable {
+      if (!okHeader) {
+        return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+      }
 
-                              EncodedStatistics page_statistics;
-                              if (header.__isset.statistics) {
-                                const format::Statistics &stats = header.statistics;
-                                if (stats.__isset.max) {
-                                  page_statistics.set_max(stats.max);
-                                }
-                                if (stats.__isset.min) {
-                                  page_statistics.set_min(stats.min);
-                                }
-                                if (stats.__isset.null_count) {
-                                  page_statistics.set_null_count(stats.null_count);
-                                }
-                                if (stats.__isset.distinct_count) {
-                                  page_statistics.set_distinct_count(stats.distinct_count);
-                                }
-                              }
-
-                              seen_num_rows_ += header.num_values;
-                               retval = std::make_shared<DataPageV1>(
-                                 page_buffer, header.num_values, FromThrift(header.encoding),
-                                 FromThrift(header.definition_level_encoding),
-                                 FromThrift(header.repetition_level_encoding), page_statistics);
-                               return seastar::make_ready_future<>();
-                            } else if (current_page_header_.type == format::PageType::DATA_PAGE_V2) {
-                              ++page_ordinal_;
-                              const format::DataPageHeaderV2 &header = current_page_header_.data_page_header_v2;
-                              bool is_compressed = header.__isset.is_compressed ? header.is_compressed : false;
-
-                              seen_num_rows_ += header.num_values;
-
-                              retval = std::make_shared<DataPageV2>(
-                                page_buffer, header.num_values, header.num_nulls, header.num_rows,
-                                FromThrift(header.encoding), header.definition_levels_byte_length,
-                                header.repetition_levels_byte_length, is_compressed);
-                              return seastar::make_ready_future<>();
-                            } else {
-                              // We don't know what this page type is. We're allowed to skip non-data
-                              // pages.
-                              return seastar::make_ready_future<>();
-                            }
-                          }
-                        );
-                      }
-                    );
-                  }
-                );
-              }
-            ).then(
-              [retval] {
-                return seastar::make_ready_future < std::shared_ptr < Page >> (retval);
-              }
-            );
+      // Advance the stream offset
+      return stream_->Advance(*header_size).then([this, page]() mutable {
+        int compressed_len = current_page_header_.compressed_page_size;
+        int uncompressed_len = current_page_header_.uncompressed_page_size;
+        if (crypto_ctx_.data_decryptor != nullptr) {
+          UpdateDecryption(crypto_ctx_.data_decryptor, encryption::kDictionaryPage,
+                           data_page_aad_);
+        }
+        // Read the compressed data page.
+        std::shared_ptr<Buffer> page_buffer;
+        return stream_->Read(compressed_len, &page_buffer).then([this, compressed_len, uncompressed_len, page_buffer = std::move(page_buffer), page](int readBytes) mutable {
+          if (page_buffer->size() != compressed_len) {
+            std::stringstream ss;
+            ss << "Page was smaller (" << page_buffer->size() << ") than expected ("
+               << compressed_len << ")";
+            ParquetException::EofException(ss.str());
           }
-  );
-}
 
-#endif
+          // Decrypt it if we need to
+          if (crypto_ctx_.data_decryptor != nullptr) {
+            PARQUET_THROW_NOT_OK(decryption_buffer_->Resize(
+                compressed_len - crypto_ctx_.data_decryptor->CiphertextSizeDelta()));
+            compressed_len = crypto_ctx_.data_decryptor->Decrypt(
+                page_buffer->data(), compressed_len, decryption_buffer_->mutable_data());
+
+            page_buffer = decryption_buffer_;
+          }
+          // Uncompress it if we need to
+          if (decompressor_ != nullptr) {
+            // Grow the uncompressed buffer if we need to.
+            if (uncompressed_len > static_cast<int>(decompression_buffer_->size())) {
+              PARQUET_THROW_NOT_OK(decompression_buffer_->Resize(uncompressed_len, false));
+            }
+            PARQUET_THROW_NOT_OK(
+                decompressor_->Decompress(compressed_len, page_buffer->data(), uncompressed_len,
+                                          decompression_buffer_->mutable_data()));
+            page_buffer = decompression_buffer_;
+          }
+
+          if (current_page_header_.type == format::PageType::DICTIONARY_PAGE) {
+            crypto_ctx_.start_decrypt_with_dictionary_page = false;
+            const format::DictionaryPageHeader& dict_header =
+                current_page_header_.dictionary_page_header;
+
+            bool is_sorted = dict_header.__isset.is_sorted ? dict_header.is_sorted : false;
+
+            *page = std::make_shared<DictionaryPage>(page_buffer, dict_header.num_values,
+                                                     FromThrift(dict_header.encoding),
+                                                     is_sorted);
+            return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+          } else if (current_page_header_.type == format::PageType::DATA_PAGE) {
+            ++page_ordinal_;
+            const format::DataPageHeader& header = current_page_header_.data_page_header;
+
+            EncodedStatistics page_statistics;
+            if (header.__isset.statistics) {
+              const format::Statistics& stats = header.statistics;
+              if (stats.__isset.max) {
+                page_statistics.set_max(stats.max);
+              }
+              if (stats.__isset.min) {
+                page_statistics.set_min(stats.min);
+              }
+              if (stats.__isset.null_count) {
+                page_statistics.set_null_count(stats.null_count);
+              }
+              if (stats.__isset.distinct_count) {
+                page_statistics.set_distinct_count(stats.distinct_count);
+              }
+            }
+
+            seen_num_rows_ += header.num_values;
+            *page = std::make_shared<DataPageV1>(
+                page_buffer, header.num_values, FromThrift(header.encoding),
+                FromThrift(header.definition_level_encoding),
+                FromThrift(header.repetition_level_encoding), page_statistics);
+            return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+          } else if (current_page_header_.type == format::PageType::DATA_PAGE_V2) {
+            ++page_ordinal_;
+            const format::DataPageHeaderV2& header = current_page_header_.data_page_header_v2;
+            bool is_compressed = header.__isset.is_compressed ? header.is_compressed : false;
+
+            seen_num_rows_ += header.num_values;
+
+            *page = std::make_shared<DataPageV2>(
+                page_buffer, header.num_values, header.num_nulls, header.num_rows,
+                FromThrift(header.encoding), header.definition_levels_byte_length,
+                header.repetition_levels_byte_length, is_compressed);
+            return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+          } else {
+            // We don't know what this page type is. We're allowed to skip non-data
+            // pages.
+            return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::no);
+          }
+          // Unreachable code, just to make the type checker stop complaining
+          return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::no);
+        });
+      });
+    });
+  }).then([page]() {
+    return *page;
+  });
+}
 
 std::unique_ptr<PageReader> PageReader::Open(
   const std::shared_ptr<FutureInputStream>& stream, int64_t total_num_rows,
@@ -2330,59 +2181,53 @@ seastar::future<int64_t> TypedColumnReaderImpl<DType>::ReadBatchSpaced(
 
 template <typename DType>
 seastar::future<int64_t> TypedColumnReaderImpl<DType>::Skip(int64_t num_rows_to_skip) {
-  int64_t rows_to_skip = num_rows_to_skip;
-  int64_t values_read;
+  std::shared_ptr<int64_t> rows_to_skip = std::make_shared<int64_t>(num_rows_to_skip);
+  std::shared_ptr<int64_t> values_read = std::make_shared<int64_t>(0);
 
-  return seastar::do_with(std::move(rows_to_skip), std::move(values_read),
-                          [this, num_rows_to_skip](auto &rows_to_skip, auto &values_read){
-                            return seastar::repeat(
-                              [this, &rows_to_skip, &values_read, num_rows_to_skip] () mutable {
-                                return HasNext().then(
-                                  [this, &rows_to_skip, &values_read, num_rows_to_skip] (bool has_next) mutable {
-                                    if (!(has_next && rows_to_skip > 0)) {
-                                      return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
-                                    }
-                                    // If the number of rows to skip is more than the number of undecoded values, skip the
-                                    // Page.
-                                    if (rows_to_skip > (this->num_buffered_values_ - this->num_decoded_values_)) {
-                                      rows_to_skip -= this->num_buffered_values_ - this->num_decoded_values_;
-                                      this->num_decoded_values_ = this->num_buffered_values_;
-                                      return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::no);
-                                    }
-                                    // We need to read this Page
-                                    // Jump to the right offset in the Page
-                                    int64_t batch_size = 1024;  // ReadBatch with a smaller memory footprint
-                                    values_read = 0;
+  return seastar::repeat([=] () mutable {
+    return HasNext().then([=] (bool has_next) mutable {
+      if (!(has_next && *rows_to_skip > 0)) {
+        return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+      }
+      // If the number of rows to skip is more than the number of undecoded values, skip the
+      // Page.
+      if (*rows_to_skip > (this->num_buffered_values_ - this->num_decoded_values_)) {
+        *rows_to_skip -= this->num_buffered_values_ - this->num_decoded_values_;
+        this->num_decoded_values_ = this->num_buffered_values_;
+        return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::no);
+      }
+      // We need to read this Page
+      // Jump to the right offset in the Page
+      int64_t batch_size = 1024;  // ReadBatch with a smaller memory footprint
+      *values_read = 0;
 
-                                    // This will be enough scratch space to accommodate 16-bit levels or any
-                                    // value type
-                                    std::shared_ptr<ResizableBuffer> scratch = AllocateBuffer(
-                                      this->pool_, batch_size * type_traits<DType::type_num>::value_byte_size);
+      // This will be enough scratch space to accommodate 16-bit levels or any
+      // value type
+      std::shared_ptr<ResizableBuffer> scratch = AllocateBuffer(
+        this->pool_, batch_size * type_traits<DType::type_num>::value_byte_size);
 
-                                    return seastar::repeat(
-                                      [=, &rows_to_skip, &values_read, &has_next] () mutable {
-                                        batch_size = std::min(batch_size, rows_to_skip);
-                                        return ReadBatch(static_cast<int>(batch_size),
-                                                         reinterpret_cast<int16_t*>(scratch->mutable_data()),
-                                                         reinterpret_cast<int16_t*>(scratch->mutable_data()),
-                                                         reinterpret_cast<T*>(scratch->mutable_data()),
-                                                         &values_read).then([&values_read, &rows_to_skip](int64_t batch_read){
-                                          values_read = batch_read;
-                                          rows_to_skip -= values_read;
-                                          if (values_read > 0 && rows_to_skip > 0){
-                                            return seastar::stop_iteration::no;
-                                          }
-                                          return seastar::stop_iteration::yes;
-                                        });
-                                      }
-                                    ).then([]{
-                                      return seastar::stop_iteration::no;
-                                    });
-                                  });
-                              }).then([num_rows_to_skip, &rows_to_skip]{
-                              return seastar::make_ready_future<int64_t>(num_rows_to_skip - rows_to_skip);
-                            });
-                          });
+      return seastar::repeat([=] () mutable {
+        batch_size = std::min(batch_size, *rows_to_skip);
+        return ReadBatch(static_cast<int>(batch_size),
+           reinterpret_cast<int16_t*>(scratch->mutable_data()),
+           reinterpret_cast<int16_t*>(scratch->mutable_data()),
+           reinterpret_cast<T*>(scratch->mutable_data()),
+           values_read.get()
+        ).then([values_read, rows_to_skip] (int64_t batch_read) {
+          *values_read = batch_read;
+          *rows_to_skip -= *values_read;
+          if (*values_read > 0 && *rows_to_skip > 0){
+            return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::no);
+          }
+          return seastar::make_ready_future<seastar::stop_iteration>(seastar::stop_iteration::yes);
+        });
+      }).then([] {
+        return seastar::stop_iteration::no;
+      });
+    });
+  }).then([num_rows_to_skip, rows_to_skip]{
+    return seastar::make_ready_future<int64_t>(num_rows_to_skip - *rows_to_skip);
+  });
 }
 
 // ----------------------------------------------------------------------
@@ -2460,89 +2305,82 @@ class TypedRecordReader : public ColumnReaderImplBase<DType>,
 
   seastar::future<int64_t> ReadRecords(int64_t num_records) override {
     // Delimit records, then read values at the end
-    int64_t records_read = 0;
-    bool break_loop = false;
+    std::shared_ptr<int64_t> records_read = std::make_shared<int64_t>(0);
+    std::shared_ptr<bool> break_loop = std::make_shared<bool>(false);
 
     if (levels_position_ < levels_written_) {
-      records_read += ReadRecordData(num_records);
-    }
-
-    if (at_record_start_ && records_read >= num_records){
-      return seastar::make_ready_future<int64_t>(0);
+      *records_read += ReadRecordData(num_records);
     }
 
     int64_t level_batch_size = std::max(::parquet::internal::kMinLevelBatchSize, num_records);
 
-    return seastar::do_with(std::move(records_read), std::move(break_loop),
-                            [this, num_records, level_batch_size] (auto &records_read, auto &break_loop) {
-                              // If we are in the middle of a record, we continue until reaching the
-                              // desired number of records or the end of the current record if we've found
-                              // enough records
-                              return seastar::do_until(
-                                [this, &break_loop, &records_read, num_records] {
-                                  return !break_loop && (!at_record_start_ || records_read < num_records);
-                                },
-                                [=, &break_loop, &records_read] () mutable {
-                                  return this->HasNextInternal().then([=, &break_loop, &records_read](bool has_next){
-                                    // Is there more data to read in this row group?
-                                    if (!has_next) {
-                                      if (!at_record_start_) {
-                                        // We ended the row group while inside a record that we haven't seen
-                                        // the end of yet. So increment the record count for the last record in
-                                        // the row group
-                                        ++records_read;
-                                        at_record_start_ = true;
-                                      }
-                                      break_loop = true;
-                                      return seastar::make_ready_future<>();
-                                    }
+    // If we are in the middle of a record, we continue until reaching the
+    // desired number of records or the end of the current record if we've found
+    // enough records
+    return seastar::do_until(
+      [=] {
+        return *break_loop || !(!at_record_start_ || *records_read < num_records);
+      },
+      [=] () mutable {
+        return this->HasNextInternal().then([=](bool has_next){
+          // Is there more data to read in this row group?
+          if (!has_next) {
+            if (!at_record_start_) {
+              // We ended the row group while inside a record that we haven't seen
+              // the end of yet. So increment the record count for the last record in
+              // the row group
+              ++(*records_read);
+              at_record_start_ = true;
+            }
+            *break_loop = true;
+            return seastar::make_ready_future<>();
+          }
 
-                                    /// We perform multiple batch reads until we either exhaust the row group
-                                    /// or observe the desired number of records
-                                    int64_t batch_size = std::min(level_batch_size, available_values_current_page());
+          /// We perform multiple batch reads until we either exhaust the row group
+          /// or observe the desired number of records
+          int64_t batch_size = std::min(level_batch_size, available_values_current_page());
 
-                                    // No more data in column
-                                    if (batch_size == 0) {
-                                      break_loop = true;
-                                      return seastar::make_ready_future<>();
-                                    }
+          // No more data in column
+          if (batch_size == 0) {
+            *break_loop = true;
+            return seastar::make_ready_future<>();
+          }
 
-                                    if (this->max_def_level_ > 0) {
-                                      ReserveLevels(batch_size);
+          if (this->max_def_level_ > 0) {
+            ReserveLevels(batch_size);
 
-                                      int16_t* def_levels = this->def_levels() + levels_written_;
-                                      int16_t* rep_levels = this->rep_levels() + levels_written_;
+            int16_t* def_levels = this->def_levels() + levels_written_;
+            int16_t* rep_levels = this->rep_levels() + levels_written_;
 
-                                      // Not present for non-repeated fields
-                                      int64_t levels_read = 0;
-                                      if (this->max_rep_level_ > 0) {
-                                        levels_read = this->ReadDefinitionLevels(batch_size, def_levels);
-                                        if (this->ReadRepetitionLevels(batch_size, rep_levels) != levels_read) {
-                                          throw ParquetException("Number of decoded rep / def levels did not match");
-                                        }
-                                      } else if (this->max_def_level_ > 0) {
-                                        levels_read = this->ReadDefinitionLevels(batch_size, def_levels);
-                                      }
+            // Not present for non-repeated fields
+            int64_t levels_read = 0;
+            if (this->max_rep_level_ > 0) {
+              levels_read = this->ReadDefinitionLevels(batch_size, def_levels);
+              if (this->ReadRepetitionLevels(batch_size, rep_levels) != levels_read) {
+                throw ParquetException("Number of decoded rep / def levels did not match");
+              }
+            } else if (this->max_def_level_ > 0) {
+              levels_read = this->ReadDefinitionLevels(batch_size, def_levels);
+            }
 
-                                      // Exhausted column chunk
-                                      if (levels_read == 0) {
-                                        break_loop = true;
-                                        return seastar::make_ready_future<>();
-                                      }
+            // Exhausted column chunk
+            if (levels_read == 0) {
+              *break_loop = true;
+              return seastar::make_ready_future<>();
+            }
 
-                                      levels_written_ += levels_read;
-                                      records_read += ReadRecordData(num_records - records_read);
-                                    } else {
-                                      // No repetition or definition levels
-                                      batch_size = std::min(num_records - records_read, batch_size);
-                                      records_read += ReadRecordData(batch_size);
-                                    }
-                                    return seastar::make_ready_future<>();
-                                  });
-                                }).then([&records_read]{
-                                return seastar::make_ready_future<int64_t>(records_read);
-                              });
-                            });
+            levels_written_ += levels_read;
+            *records_read += ReadRecordData(num_records - *records_read);
+          } else {
+            // No repetition or definition levels
+            batch_size = std::min(num_records - *records_read, batch_size);
+            *records_read += ReadRecordData(batch_size);
+          }
+          return seastar::make_ready_future<>();
+        });
+      }).then([records_read]{
+        return seastar::make_ready_future<int64_t>(*records_read);
+      });
   }
 
   // We may outwardly have the appearance of having exhausted a column chunk
