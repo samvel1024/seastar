@@ -416,12 +416,11 @@ function(parquet_add_test name src)
     gtest crypto parquet_testing)
   # TODO [PQ] does crypto really belong to here ?
 endfunction()
-parquet_add_test(parquet_column_writer_test parquet/parquet_column_writer_test.cc)
-parquet_add_test(parquet_column_reader_test parquet/parquet_column_reader_test.cc)
-parquet_add_test(parquet_file_serialize_test parquet/parquet_file_serialize_test.cc)
-parquet_add_test(parquet_file_deserialize_test parquet/parquet_file_deserialize_test.cc)
-parquet_add_test(parquet_reader_test parquet/parquet_reader_test.cc)
-parquet_add_test(parquet_encryption_write_configurations_test parquet/parquet_encryption_write_configurations_test.cc)
+parquet_add_test(parquet_column_writer parquet/parquet_column_writer_test.cc)
+parquet_add_test(parquet_column_reader parquet/parquet_column_reader_test.cc)
+parquet_add_test(parquet_file_serialize parquet/parquet_file_serialize_test.cc)
+parquet_add_test(parquet_file_deserialize parquet/parquet_file_deserialize_test.cc)
+parquet_add_test(parquet_reader parquet/parquet_reader_test.cc)
 
 set (tls_certificate_files
   catest.key
