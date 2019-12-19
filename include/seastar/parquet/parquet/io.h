@@ -70,9 +70,9 @@ class FileFutureInputStream : public FutureInputStream {
 
  private:
   seastar::input_stream<char> input_;
-  std::vector<char> buffer;
+  std::vector<char> buffer_;
   int64_t pos_ = 0;
-  int64_t buffered_bytes = 0;
+  int64_t buffered_bytes_ = 0;
 };
 
 class MemoryFutureInputStream : public FutureInputStream {

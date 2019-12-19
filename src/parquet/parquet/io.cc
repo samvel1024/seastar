@@ -67,25 +67,25 @@ FileFutureInputStream::FileFutureInputStream(seastar::input_stream<char> &&input
   : input_(std::move(input)) {}
 
 seastar::future<int64_t> FileFutureInputStream::Read(int64_t nbytes, void *out) {
-  if (buffer.size() < (uint64_t) nbytes) {
-    buffer.resize(nbytes);
+  if (buffer_.size() < (uint64_t) nbytes) {
+    buffer_.resize(nbytes);
   }
 
-  if (buffered_bytes >= nbytes) {
+  if (buffered_bytes_ >= nbytes) {
     pos_ += nbytes;
-    memcpy(out, buffer.data(), nbytes);
-    memmove(buffer.data(), buffer.data() + nbytes, buffered_bytes - nbytes);
-    buffered_bytes -= nbytes;
+    memcpy(out, buffer_.data(), nbytes);
+    memmove(buffer_.data(), buffer_.data() + nbytes, buffered_bytes_ - nbytes);
+    buffered_bytes_ -= nbytes;
     return seastar::make_ready_future<int64_t>(nbytes);
   }
 
-  return input_.read_up_to(nbytes - buffered_bytes).then(
+  return input_.read_up_to(nbytes - buffered_bytes_).then(
     [=] (seastar::temporary_buffer<char> buf) {
-      int64_t read_bytes = buffered_bytes + buf.size();
+      int64_t read_bytes = buffered_bytes_ + buf.size();
       pos_ += read_bytes;
-      memcpy(out, buffer.data(), buffered_bytes);
-      memcpy(static_cast<char*>(out) + buffered_bytes, buf.get(), buf.size());
-      buffered_bytes = 0;
+      memcpy(out, buffer_.data(), buffered_bytes_);
+      memcpy(static_cast<char*>(out) + buffered_bytes_, buf.get(), buf.size());
+      buffered_bytes_ = 0;
       return seastar::make_ready_future<int64_t>(read_bytes);
     });
 }
@@ -98,21 +98,21 @@ FileFutureInputStream::Read(int64_t nbytes, std::shared_ptr<Buffer> *out) {
 
 seastar::future<int64_t>
 FileFutureInputStream::Peek(int64_t nbytes, std::string_view *out) {
-  if (buffer.size() < (uint64_t) nbytes) {
-    buffer.resize(nbytes);
+  if (buffer_.size() < (uint64_t) nbytes) {
+    buffer_.resize(nbytes);
   }
 
-  if (buffered_bytes >= nbytes) {
-    *out = std::string_view(buffer.data(), nbytes);
+  if (buffered_bytes_ >= nbytes) {
+    *out = std::string_view(buffer_.data(), nbytes);
     return seastar::make_ready_future<int64_t>(nbytes);
   }
 
-  return input_.read_up_to(nbytes - buffered_bytes).then(
+  return input_.read_up_to(nbytes - buffered_bytes_).then(
     [=](seastar::temporary_buffer<char> buf) {
-      memcpy(buffer.data() + buffered_bytes, buf.get(), buf.size());
-      buffered_bytes += buf.size();
-      *out = std::string_view(buffer.data(), buffered_bytes);
-      return seastar::make_ready_future<int64_t>(buffered_bytes);
+      memcpy(buffer_.data() + buffered_bytes_, buf.get(), buf.size());
+      buffered_bytes_ += buf.size();
+      *out = std::string_view(buffer_.data(), buffered_bytes_);
+      return seastar::make_ready_future<int64_t>(buffered_bytes_);
     });
 }
 
@@ -122,13 +122,13 @@ seastar::future<> FileFutureInputStream::Close() {
 
 seastar::future<> FileFutureInputStream::Advance(int64_t nbytes) {
   pos_ += nbytes;
-  if (nbytes >= buffered_bytes){
-    nbytes -= buffered_bytes;
-    buffered_bytes = 0;
+  if (nbytes >= buffered_bytes_){
+    nbytes -= buffered_bytes_;
+    buffered_bytes_ = 0;
     return input_.skip(nbytes);
   } else{
-    memmove(buffer.data(), buffer.data() + nbytes, buffered_bytes - nbytes);
-    buffered_bytes -= nbytes;
+    memmove(buffer_.data(), buffer_.data() + nbytes, buffered_bytes_ - nbytes);
+    buffered_bytes_ -= nbytes;
     return seastar::make_ready_future<>();
   }
 }
