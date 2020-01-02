@@ -288,6 +288,22 @@ class ARROW_EXPORT Array {
   /// function
   int64_t null_count() const;
 
+  /// Compare if the range of slots specified are equal for the given array and
+  /// this array.  end_idx exclusive.  This methods does not bounds check.
+  bool RangeEquals(int64_t start_idx, int64_t end_idx, int64_t other_start_idx,
+                   const Array& other) const;
+  bool RangeEquals(int64_t start_idx, int64_t end_idx, int64_t other_start_idx,
+                   const std::shared_ptr<Array>& other) const;
+  bool RangeEquals(const Array& other, int64_t start_idx, int64_t end_idx,
+                   int64_t other_start_idx) const;
+  bool RangeEquals(const std::shared_ptr<Array>& other, int64_t start_idx,
+                   int64_t end_idx, int64_t other_start_idx) const;
+
+  /// Equality comparison with another array
+  bool Equals(const Array& arr, const EqualOptions& = EqualOptions::Defaults()) const;
+  bool Equals(const std::shared_ptr<Array>& arr,
+              const EqualOptions& = EqualOptions::Defaults()) const;
+
   std::shared_ptr<DataType> type() const { return data_->type; }
   Type::type type_id() const { return data_->type->id(); }
 

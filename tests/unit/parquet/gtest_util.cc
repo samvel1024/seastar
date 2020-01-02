@@ -67,6 +67,13 @@ void AssertBufferEqual(const Buffer& buffer, const Buffer& expected) {
   ASSERT_TRUE(buffer.Equals(expected));
 }
 
+void AssertArraysEqual(const Array& expected, const Array& actual, bool verbose) {
+  std::stringstream diff;
+  if (!expected.Equals(actual, EqualOptions().diff_sink(&diff))) {
+    FAIL() << diff.str();
+  }
+}
+
 void AssertSchemaEqual(const Schema& lhs, const Schema& rhs) {
   if (!lhs.Equals(rhs)) {
     std::stringstream ss;

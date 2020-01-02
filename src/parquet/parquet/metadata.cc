@@ -29,7 +29,7 @@
 #include <seastar/parquet/parquet/internal_file_decryptor.h>
 #include <seastar/parquet/parquet/metadata.h>
 #include <seastar/parquet/parquet/schema.h>
-#include "parquet/parquet/schema_internal.h"
+#include <seastar/parquet/parquet/schema_internal.h>
 #include <seastar/parquet/parquet/statistics.h>
 #include <seastar/parquet/parquet/thrift_internal.h>
 #include <seastar/parquet/parquet/io.h>

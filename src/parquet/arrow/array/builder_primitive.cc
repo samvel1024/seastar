@@ -75,37 +75,6 @@ Status BooleanBuilder::FinishInternal(std::shared_ptr<ArrayData>* out) {
   return Status::OK();
 }
 
-Status BooleanBuilder::AppendValues(const uint8_t* values, int64_t length,
-                                    const uint8_t* valid_bytes) {
-  RETURN_NOT_OK(Reserve(length));
-
-  int64_t i = 0;
-  data_builder_.UnsafeAppend<false>(length,
-                                    [values, &i]() -> bool { return values[i++] != 0; });
-  ArrayBuilder::UnsafeAppendToBitmap(valid_bytes, length);
-  return Status::OK();
-}
-
-Status BooleanBuilder::AppendValues(const uint8_t* values, int64_t length,
-                                    const std::vector<bool>& is_valid) {
-  RETURN_NOT_OK(Reserve(length));
-  DCHECK_EQ(length, static_cast<int64_t>(is_valid.size()));
-  int64_t i = 0;
-  data_builder_.UnsafeAppend<false>(length,
-                                    [values, &i]() -> bool { return values[i++]; });
-  ArrayBuilder::UnsafeAppendToBitmap(is_valid);
-  return Status::OK();
-}
-
-Status BooleanBuilder::AppendValues(const std::vector<uint8_t>& values,
-                                    const std::vector<bool>& is_valid) {
-  return AppendValues(values.data(), static_cast<int64_t>(values.size()), is_valid);
-}
-
-Status BooleanBuilder::AppendValues(const std::vector<uint8_t>& values) {
-  return AppendValues(values.data(), static_cast<int64_t>(values.size()));
-}
-
 Status BooleanBuilder::AppendValues(const std::vector<bool>& values,
                                     const std::vector<bool>& is_valid) {
   const int64_t length = static_cast<int64_t>(values.size());

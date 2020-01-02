@@ -67,7 +67,7 @@ set_property (CACHE Seastar_API_LEVEL
 #
 
 set (CMAKE_CXX_FLAGS_DEV
-  "-O1"
+  "-O1 -fdiagnostics-color=always"
   CACHE
   STRING
   "Flags used by the C++ compiler during dev builds."
@@ -424,7 +424,6 @@ src/parquet/parquet/platform.cc
 src/parquet/parquet/printer.cc
 src/parquet/parquet/properties.cc
 src/parquet/parquet/schema.cc
-src/parquet/parquet/schema_internal.h
 src/parquet/parquet/statistics.cc
 src/parquet/parquet/types.cc
 src/parquet/arrow/array.cc
@@ -479,6 +478,7 @@ include/seastar/parquet/parquet/platform.h
 include/seastar/parquet/parquet/printer.h
 include/seastar/parquet/parquet/properties.h
 include/seastar/parquet/parquet/schema.h
+include/seastar/parquet/parquet/schema_internal.h
 include/seastar/parquet/parquet/statistics.h
 include/seastar/parquet/parquet/thrift_internal.h
 include/seastar/parquet/parquet/types.h

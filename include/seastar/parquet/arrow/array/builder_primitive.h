@@ -301,8 +301,6 @@ class ARROW_EXPORT BooleanBuilder : public ArrayBuilder {
     return Status::OK();
   }
 
-  Status Append(const uint8_t val) { return Append(val != 0); }
-
   /// Scalar append, without checking for capacity
   void UnsafeAppend(const bool val) {
     data_builder_.UnsafeAppend(val);

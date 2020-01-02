@@ -27,7 +27,7 @@
 #include <seastar/parquet/arrow/util/logging.h>
 
 #include <seastar/parquet/parquet/exception.h>
-#include "parquet/parquet/schema_internal.h"
+#include <seastar/parquet/parquet/schema_internal.h>
 #include <seastar/parquet/parquet/thrift_internal.h>
 
 using parquet::format::SchemaElement;

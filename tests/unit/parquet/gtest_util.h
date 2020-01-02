@@ -287,6 +287,23 @@ void ArrayFromVector(const std::vector<C_TYPE>& values, std::shared_ptr<Array>* 
   ArrayFromVector<TYPE, C_TYPE>(type, values, out);
 }
 
+template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
+std::shared_ptr<Array> ArrayFromVector(const std::shared_ptr<DataType>& type,
+                                       const std::vector<bool>& is_valid,
+                                       const std::vector<C_TYPE>& values) {
+  std::shared_ptr<Array> retval;
+  ArrayFromVector<TYPE, C_TYPE>(type, is_valid, values, &retval);
+  return retval;
+}
+
+template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
+std::shared_ptr<Array> ArrayFromVector(const std::shared_ptr<DataType>& type,
+                                       const std::vector<C_TYPE>& values) {
+  std::shared_ptr<Array> retval;
+  ArrayFromVector<TYPE, C_TYPE>(type, values, &retval);
+  return retval;
+}
+
 // ChunkedArrayFromVector: construct a ChunkedArray from vectors of C values
 
 template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
