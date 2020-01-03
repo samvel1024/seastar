@@ -92,23 +92,23 @@ class PARQUET_EXPORT ParquetFileReader {
   // subclass of RandomAccessSource that wraps the shared resource
   ARROW_DEPRECATED("Use arrow::io::RandomAccessFile version")
   static std::unique_ptr<ParquetFileReader> Open(
-  std::unique_ptr<RandomAccessSource> source,
-  const ReaderProperties& props = default_reader_properties(),
-  const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
+    std::unique_ptr<RandomAccessSource> source,
+    const ReaderProperties& props = default_reader_properties(),
+    const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
 
   // Create a file reader instance from an Arrow file object. Thread-safety is
   // the responsibility of the file implementation
   static std::unique_ptr<ParquetFileReader> Open(
-  const std::shared_ptr<::arrow::io::RandomAccessFile>& source,
-  const ReaderProperties& props = default_reader_properties(),
-  const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
+    const std::shared_ptr<::arrow::io::RandomAccessFile>& source,
+    const ReaderProperties& props = default_reader_properties(),
+    const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
 
   // API Convenience to open a serialized Parquet file on disk, using Arrow IO
   // interfaces.
   static std::unique_ptr<ParquetFileReader> OpenFile(
-  const std::string& path, bool memory_map = true,
-  const ReaderProperties& props = default_reader_properties(),
-  const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
+    const std::string& path, bool memory_map = true,
+    const ReaderProperties& props = default_reader_properties(),
+    const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
 
   void Open(std::unique_ptr<Contents> contents);
   void Close();
@@ -133,9 +133,9 @@ ReadMetaData(const std::shared_ptr<::arrow::io::RandomAccessFile>& source);
 /// \param[in] column_batch_size number of values to read at a time when scanning column
 /// \param[in] reader a ParquetFileReader instance
 /// \return number of semantic rows in file
-PARQUET_EXPORT
-  int64_t ScanFileContents(std::vector<int> columns, const int32_t column_batch_size,
-  ParquetFileReader* reader);
+PARQUET_EXPORT int64_t
+ScanFileContents(std::vector<int> columns, const int32_t column_batch_size,
+                 ParquetFileReader* reader);
 
 namespace seastarized {
 
@@ -193,9 +193,9 @@ class PARQUET_EXPORT ParquetFileReader {
   ~ParquetFileReader();
 
   static seastar::future<std::unique_ptr<ParquetFileReader>> Open(
-  const std::shared_ptr<RandomAccessSource>& source,
-  const ReaderProperties& props = default_reader_properties(),
-  const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
+    const std::shared_ptr<RandomAccessSource>& source,
+    const ReaderProperties& props = default_reader_properties(),
+    const std::shared_ptr<FileMetaData>& metadata = NULLPTR);
 
   void Open(std::unique_ptr<Contents> contents);
   void Close();
@@ -212,7 +212,7 @@ class PARQUET_EXPORT ParquetFileReader {
 };
 
 // Read only Parquet file metadata
-seastar::future<std::shared_ptr<FileMetaData>> PARQUET_EXPORT
+PARQUET_EXPORT seastar::future<std::shared_ptr<FileMetaData>>
 ReadMetaData(const std::shared_ptr<RandomAccessSource>& source);
 
 /// \brief Scan all values in file. Useful for performance testing
@@ -220,10 +220,9 @@ ReadMetaData(const std::shared_ptr<RandomAccessSource>& source);
 /// \param[in] column_batch_size number of values to read at a time when scanning column
 /// \param[in] reader a ParquetFileReader instance
 /// \return number of semantic rows in file
-PARQUET_EXPORT
-  seastar::future<int64_t>
+PARQUET_EXPORT seastar::future<int64_t>
 ScanFileContents(std::vector<int> columns, const int32_t column_batch_size,
-  ParquetFileReader* reader);
+                 ParquetFileReader* reader);
 
 }  // namespace seastarized
 

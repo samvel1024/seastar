@@ -62,7 +62,7 @@ class PARQUET_EXPORT LevelDecoder {
   // Initialize the LevelDecoder state with new data
   // and return the number of bytes consumed
   int SetData(Encoding::type encoding, int16_t max_level, int num_buffered_values,
-  const uint8_t* data);
+              const uint8_t* data);
 
   // Decodes a batch of levels into an array and returns the number of levels decoded
   int Decode(int batch_size, int16_t* levels);
@@ -99,9 +99,11 @@ class PARQUET_EXPORT PageReader {
   virtual ~PageReader() = default;
 
   static std::unique_ptr<PageReader> Open(
-  const std::shared_ptr<ArrowInputStream>& stream, int64_t total_num_rows,
-  Compression::type codec, ::arrow::MemoryPool* pool = ::arrow::default_memory_pool(),
-  const CryptoContext* ctx = NULLPTR);
+    const std::shared_ptr<ArrowInputStream>& stream,
+    int64_t total_num_rows,
+    Compression::type codec,
+    ::arrow::MemoryPool* pool = ::arrow::default_memory_pool(),
+    const CryptoContext* ctx = NULLPTR);
 
   // @returns: shared_ptr<Page>(nullptr) on EOS, std::shared_ptr<Page>
   // containing new Page otherwise
@@ -115,8 +117,8 @@ class PARQUET_EXPORT ColumnReader {
   virtual ~ColumnReader() = default;
 
   static std::shared_ptr<ColumnReader> Make(
-  const ColumnDescriptor* descr, std::unique_ptr<PageReader> pager,
-  ::arrow::MemoryPool* pool = ::arrow::default_memory_pool());
+    const ColumnDescriptor* descr, std::unique_ptr<PageReader> pager,
+    ::arrow::MemoryPool* pool = ::arrow::default_memory_pool());
 
   // Returns true if there are still values in this column.
   virtual bool HasNext() = 0;
@@ -385,7 +387,7 @@ using DoubleReader = TypedColumnReader<DoubleType>;
 using ByteArrayReader = TypedColumnReader<ByteArrayType>;
 using FixedLenByteArrayReader = TypedColumnReader<FLBAType>;
 
-namespace seastarized{
+namespace seastarized {
 
 // Abstract page iterator interface. This way, we can feed column pages to the
 // ColumnReader through whatever mechanism we choose
@@ -393,9 +395,11 @@ class PARQUET_EXPORT PageReader {
   public:
   virtual ~PageReader() = default;
   static std::unique_ptr<PageReader> Open(
-  const std::shared_ptr<FutureInputStream>& stream, int64_t total_num_rows,
-  Compression::type codec, ::arrow::MemoryPool* pool = ::arrow::default_memory_pool(),
-  const CryptoContext* ctx = NULLPTR);
+    const std::shared_ptr<FutureInputStream>& stream,
+    int64_t total_num_rows,
+    Compression::type codec,
+    ::arrow::MemoryPool* pool = ::arrow::default_memory_pool(),
+    const CryptoContext* ctx = NULLPTR);
 
   // @returns: shared_ptr<Page>(nullptr) on EOS, std::shared_ptr<Page>
   // containing new Page otherwise
@@ -409,8 +413,9 @@ class PARQUET_EXPORT ColumnReader {
   virtual ~ColumnReader() = default;
 
   static std::shared_ptr<ColumnReader> Make(
-  const ColumnDescriptor* descr, std::unique_ptr<PageReader> pager,
-  ::arrow::MemoryPool* pool = ::arrow::default_memory_pool());
+    const ColumnDescriptor* descr,
+    std::unique_ptr<PageReader> pager,
+    ::arrow::MemoryPool* pool = ::arrow::default_memory_pool());
 
   // Returns true if there are still values in this column.
   virtual seastar::future<bool> HasNext() = 0;
@@ -443,8 +448,9 @@ class TypedColumnReader : public ColumnReader {
   // This API is the same for both V1 and V2 of the DataPage
   //
   // @returns: actual number of levels read (see values_read for number of values read)
-  virtual seastar::future<int64_t> ReadBatch(int64_t batch_size, int16_t* def_levels, int16_t* rep_levels,
-                                             T* values, int64_t* values_read) = 0;
+  virtual seastar::future<int64_t>
+  ReadBatch(int64_t batch_size, int16_t* def_levels, int16_t* rep_levels,
+            T* values, int64_t* values_read) = 0;
 
   /// Read a batch of repetition levels, definition levels, and values from the
   /// column and leave spaces for null entries on the lowest level in the values
@@ -480,10 +486,11 @@ class TypedColumnReader : public ColumnReader {
   ///   (i.e. definition_level == max_definition_level - 1)
   /// @param[out] null_count The number of nulls on the lowest levels.
   ///   (i.e. (values_read - null_count) is total number of non-null entries)
-  virtual seastar::future<int64_t> ReadBatchSpaced(int64_t batch_size, int16_t* def_levels,
-                                                   int16_t* rep_levels, T* values, uint8_t* valid_bits,
-                                                   int64_t valid_bits_offset, int64_t* levels_read,
-                                                   int64_t* values_read, int64_t* null_count) = 0;
+  virtual seastar::future<int64_t>
+  ReadBatchSpaced(int64_t batch_size, int16_t* def_levels,
+                  int16_t* rep_levels, T* values, uint8_t* valid_bits,
+                  int64_t valid_bits_offset, int64_t* levels_read,
+                  int64_t* values_read, int64_t* null_count) = 0;
 
   // Skip reading levels
   // Returns the number of levels skipped
