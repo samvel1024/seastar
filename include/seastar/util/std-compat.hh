@@ -223,6 +223,8 @@ constexpr const U* get_if(const variant<Types...>* v) {
     return std::get_if<U>(v);
 }
 
+using std::holds_alternative;
+
 #else
 
 template <typename T>
@@ -276,6 +278,11 @@ U* get_if(variant<Types...>* v) {
 template<typename U, typename... Types>
 const U* get_if(const variant<Types...>* v) {
     return boost::get<U, Types...>(v);
+}
+
+template<typename U, typename... Types>
+constexpr bool holds_alternative(const variant<Types...>& v) noexcept {
+    return boost::get<U, Types...>(&v) != nullptr;
 }
 
 #endif

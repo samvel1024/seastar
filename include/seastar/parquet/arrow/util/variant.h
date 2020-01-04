@@ -18,17 +18,15 @@
 #ifndef ARROW_UTIL_VARIANT_H
 #define ARROW_UTIL_VARIANT_H
 
-#include <variant>  // IWYU pragma: export
+#include <seastar/util/std-compat.hh>
 
 namespace arrow {
 namespace util {
 
-using ::std::bad_variant_access;
-using ::std::get;
-using ::std::get_if;
-using ::std::holds_alternative;
-using ::std::variant;
-using ::std::visit;
+using ::seastar::compat::get;
+using ::seastar::compat::get_if;
+using ::seastar::compat::holds_alternative;
+using ::seastar::compat::variant;
 
 }  // namespace util
 }  // namespace arrow

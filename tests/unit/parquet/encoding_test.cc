@@ -541,6 +541,7 @@ void GetDictDecoder(DictEncoder<T>* encoder, int64_t num_values,
   ASSERT_NE(released, nullptr);
   *out_decoder = std::unique_ptr<TypedDecoder<T>>(released);
 }
+
 template <typename ParquetType>
 class EncodingAdHocTyped : public ::testing::Test {
  public:
@@ -614,35 +615,73 @@ class EncodingAdHocTyped : public ::testing::Test {
     arrow::AssertArraysEqual(*values, *result);
   }
 
-  void DictPutIndices() {
+  template <typename U = ParquetType>
+  typename std::enable_if_t<std::is_same<U, FLBAType>::value>
+  DictPutIndices() {
     if (std::is_same<ParquetType, BooleanType>::value) {
       return;
     }
 
-    std::shared_ptr<arrow::Array> dict_values;
-    if constexpr (std::is_same<ParquetType, FLBAType>::value) {
-      dict_values = arrow::ArrayFromVector<ArrowType, std::string>(
+    auto dict_values = arrow::ArrayFromVector<ArrowType, std::string>(
           arrow_type(), {"abcdefgh", "ijklmnop", "qrstuvwx"});
-    } else {
-      dict_values = arrow::ArrayFromVector<ArrowType, int32_t>(
-          arrow_type(), {120, -37, 47});
-    }
     auto indices = arrow::ArrayFromVector<arrow::Int32Type>(arrow::int32(), {0, 1, 2});
     auto indices_nulls = arrow::ArrayFromVector<arrow::Int32Type>(
         arrow::int32(), {false, true, true, false, true}, {-999, 0, 1, -999, 2});
 
-    std::shared_ptr<arrow::Array> expected;
-    if constexpr (std::is_same<ParquetType, FLBAType>::value) {
-      expected = arrow::ArrayFromVector<ArrowType, std::string>(
+    auto expected = arrow::ArrayFromVector<ArrowType, std::string>(
           arrow_type(),
           {true, true, true, false, true, true, false, true},
           {"abcdefgh", "ijklmnop", "qrstuvwx", "", "abcdefgh", "ijklmnop", "", "qrstuvwx"});
-    } else {
-      expected = arrow::ArrayFromVector<ArrowType, int32_t>(
+
+    auto owned_encoder =
+        MakeTypedEncoder<ParquetType>(Encoding::PLAIN,
+                                      /*use_dictionary=*/true, column_descr());
+    auto owned_decoder = MakeDictDecoder<ParquetType>();
+
+    auto encoder = dynamic_cast<DictEncoder<ParquetType>*>(owned_encoder.get());
+
+    ASSERT_NO_THROW(encoder->PutDictionary(*dict_values));
+
+    // Trying to call PutDictionary again throws
+    ASSERT_THROW(encoder->PutDictionary(*dict_values), ParquetException);
+
+    ASSERT_NO_THROW(encoder->PutIndices(*indices));
+    ASSERT_NO_THROW(encoder->PutIndices(*indices_nulls));
+
+    std::shared_ptr<Buffer> buf, dict_buf;
+    int num_values = static_cast<int>(expected->length() - expected->null_count());
+
+    std::unique_ptr<TypedDecoder<ParquetType>> decoder;
+    GetDictDecoder(encoder, num_values, &buf, &dict_buf, column_descr(), &decoder);
+
+    BuilderType acc(arrow_type(), arrow::default_memory_pool());
+    ASSERT_EQ(num_values, decoder->DecodeArrow(static_cast<int>(expected->length()),
+                                               static_cast<int>(expected->null_count()),
+                                               expected->null_bitmap_data(),
+                                               expected->offset(), &acc));
+
+    std::shared_ptr<::arrow::Array> result;
+    ASSERT_OK(acc.Finish(&result));
+    arrow::AssertArraysEqual(*expected, *result);
+  }
+
+  template <typename U = ParquetType>
+  typename std::enable_if_t<!std::is_same<U, FLBAType>::value>
+  DictPutIndices() {
+    if (std::is_same<ParquetType, BooleanType>::value) {
+      return;
+    }
+
+    auto dict_values = arrow::ArrayFromVector<ArrowType, int32_t>(
+          arrow_type(), {120, -37, 47});
+    auto indices = arrow::ArrayFromVector<arrow::Int32Type>(arrow::int32(), {0, 1, 2});
+    auto indices_nulls = arrow::ArrayFromVector<arrow::Int32Type>(
+        arrow::int32(), {false, true, true, false, true}, {-999, 0, 1, -999, 2});
+
+    auto expected = arrow::ArrayFromVector<ArrowType, int32_t>(
           arrow_type(),
           {true, true, true, false, true, true, false, true},
           {120, -37, 47, -999, 120, -37, -999, 47});
-    }
 
     auto owned_encoder =
         MakeTypedEncoder<ParquetType>(Encoding::PLAIN,

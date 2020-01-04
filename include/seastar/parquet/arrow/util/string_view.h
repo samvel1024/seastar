@@ -20,17 +20,13 @@
 #define nssv_CONFIG_SELECT_STRING_VIEW nssv_STRING_VIEW_NONSTD
 
 #include <cstdint>
-#include <string>
-#include <string_view>
+#include <seastar/util/std-compat.hh>
 
 namespace arrow {
 namespace util {
 
-using ::std::string_view;
-
-template <class Char, class Traits = ::std::char_traits<Char>>
-using basic_string_view = ::std::basic_string_view<Char, Traits>;
-
+using ::seastar::compat::string_view;
+using ::seastar::compat::basic_string_view;
 using bytes_view = basic_string_view<uint8_t>;
 
 }  // namespace util
