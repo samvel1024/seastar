@@ -5,8 +5,11 @@
 #include <string_view>
 #include <seastar/parquet/parquet/platform.h>
 #include <seastar/parquet/parquet/exception.h>
+#include <seastar/util/std-compat.hh>
 
 namespace parquet::seastarized {
+
+using seastar::compat::string_view;
 
 class FutureOutputStream {
  public:
@@ -51,7 +54,7 @@ class FutureInputStream {
   virtual ~FutureInputStream() = default;
   virtual seastar::future<int64_t> Read(int64_t nbytes, void *out) = 0;
   virtual seastar::future<int64_t> Read(int64_t nbytes, std::shared_ptr<Buffer> *out) = 0;
-  virtual seastar::future<int64_t> Peek(int64_t nbytes, std::string_view *out) = 0;
+  virtual seastar::future<string_view> Peek(int64_t nbytes) = 0;
   virtual seastar::future<> Close() = 0;
   virtual seastar::future<> Advance(int64_t nbytes) = 0;
   virtual int64_t Tell() const = 0;
@@ -63,7 +66,7 @@ class FileFutureInputStream : public FutureInputStream {
   FileFutureInputStream(seastar::input_stream<char> &&input);
   seastar::future<int64_t> Read(int64_t nbytes, void *out);
   seastar::future<int64_t> Read(int64_t nbytes, std::shared_ptr<Buffer> *out);
-  seastar::future<int64_t> Peek(int64_t nbytes, std::string_view *out);
+  seastar::future<string_view> Peek(int64_t nbytes);
   seastar::future<> Close();
   seastar::future<> Advance(int64_t nbytes);
   int64_t Tell() const;
@@ -81,7 +84,7 @@ class MemoryFutureInputStream : public FutureInputStream {
   MemoryFutureInputStream(const std::shared_ptr<Buffer>& buffer);
   seastar::future<int64_t> Read(int64_t nbytes, void *out) override;
   seastar::future<int64_t> Read(int64_t nbytes, std::shared_ptr<Buffer> *out) override;
-  seastar::future<int64_t> Peek(int64_t nbytes, std::string_view *out) override;
+  seastar::future<string_view> Peek(int64_t nbytes) override;
   seastar::future<> Close() override;
   seastar::future<> Advance(int64_t nbytes) override;
   int64_t Tell() const override;
