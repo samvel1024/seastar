@@ -454,7 +454,6 @@ src/parquet/arrow/util/int_util.cc
 src/parquet/arrow/util/io_util.cc
 src/parquet/arrow/util/key_value_metadata.cc
 src/parquet/arrow/util/logging.cc
-src/parquet/arrow/util/string.cc
 src/parquet/arrow/util/string_builder.cc
 src/parquet/arrow/util/utf8.cc
 src/parquet/arrow/visitor.cc
@@ -509,12 +508,10 @@ include/seastar/parquet/arrow/table.h
 include/seastar/parquet/arrow/type.h
 include/seastar/parquet/arrow/type_fwd.h
 include/seastar/parquet/arrow/type_traits.h
-include/seastar/parquet/arrow/util/align_util.h
 include/seastar/parquet/arrow/util/bit_stream_utils.h
 include/seastar/parquet/arrow/util/bit_util.h
 include/seastar/parquet/arrow/util/bpacking.h
 include/seastar/parquet/arrow/util/checked_cast.h
-include/seastar/parquet/arrow/util/compare.h
 include/seastar/parquet/arrow/util/compression.h
 include/seastar/parquet/arrow/util/compression_snappy.h
 include/seastar/parquet/arrow/util/hashing.h
@@ -525,7 +522,6 @@ include/seastar/parquet/arrow/util/logging.h
 include/seastar/parquet/arrow/util/macros.h
 include/seastar/parquet/arrow/util/rle_encoding.h
 include/seastar/parquet/arrow/util/stl.h
-include/seastar/parquet/arrow/util/string.h
 include/seastar/parquet/arrow/util/string_builder.h
 include/seastar/parquet/arrow/util/string_view.h
 include/seastar/parquet/arrow/util/type_traits.h

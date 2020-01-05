@@ -36,7 +36,6 @@
 #include <seastar/parquet/arrow/array.h>
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/status.h>
-#include <seastar/parquet/arrow/util/align_util.h>
 #include <seastar/parquet/arrow/util/bit_util.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
@@ -74,6 +73,46 @@ Status BytesToBits(const std::vector<uint8_t>& bytes, MemoryPool* pool,
 }  // namespace BitUtil
 
 namespace internal {
+
+struct BitmapWordAlignParams {
+  int64_t leading_bits;
+  int64_t trailing_bits;
+  int64_t trailing_bit_offset;
+  const uint8_t* aligned_start;
+  int64_t aligned_bits;
+  int64_t aligned_words;
+};
+
+// Compute parameters for accessing a bitmap using aligned word instructions.
+// The returned parameters describe:
+// - a leading area of size `leading_bits` before the aligned words
+// - a word-aligned area of size `aligned_bits`
+// - a trailing area of size `trailing_bits` after the aligned words
+template <uint64_t ALIGN_IN_BYTES>
+inline BitmapWordAlignParams BitmapWordAlign(const uint8_t* data, int64_t bit_offset,
+                                             int64_t length) {
+  static_assert(BitUtil::IsPowerOf2(ALIGN_IN_BYTES),
+                "ALIGN_IN_BYTES should be a positive power of two");
+  constexpr uint64_t ALIGN_IN_BITS = ALIGN_IN_BYTES * 8;
+
+  BitmapWordAlignParams p;
+
+  // Compute a "bit address" that we can align up to ALIGN_IN_BITS.
+  // We don't care about losing the upper bits since we are only interested in the
+  // difference between both addresses.
+  const uint64_t bit_addr =
+      reinterpret_cast<size_t>(data) * 8 + static_cast<uint64_t>(bit_offset);
+  const uint64_t aligned_bit_addr = BitUtil::RoundUpToPowerOf2(bit_addr, ALIGN_IN_BITS);
+
+  p.leading_bits = std::min<int64_t>(length, aligned_bit_addr - bit_addr);
+  p.aligned_words = (length - p.leading_bits) / ALIGN_IN_BITS;
+  p.aligned_bits = p.aligned_words * ALIGN_IN_BITS;
+  p.trailing_bits = length - p.leading_bits - p.aligned_bits;
+  p.trailing_bit_offset = bit_offset + p.leading_bits + p.aligned_bits;
+
+  p.aligned_start = data + (bit_offset + p.leading_bits) / 8;
+  return p;
+}
 
 int64_t CountSetBits(const uint8_t* data, int64_t bit_offset, int64_t length) {
   constexpr int64_t pop_len = sizeof(uint64_t) * 8;

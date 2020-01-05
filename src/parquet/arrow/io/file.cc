@@ -34,7 +34,6 @@
 
 #include <seastar/parquet/arrow/io/file.h>
 #include <seastar/parquet/arrow/io/interfaces.h>
-#include <seastar/parquet/arrow/io/util_internal.h>
 
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/memory_pool.h>

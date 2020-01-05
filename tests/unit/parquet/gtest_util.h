@@ -171,8 +171,6 @@ using ArrayVector = std::vector<std::shared_ptr<Array>>;
 // If verbose is true, then the arrays will be pretty printed
 ARROW_EXPORT void AssertArraysEqual(const Array& expected, const Array& actual,
                                     bool verbose = false);
-ARROW_EXPORT void AssertBatchesEqual(const RecordBatch& expected,
-                                     const RecordBatch& actual);
 ARROW_EXPORT void AssertChunkedEqual(const ChunkedArray& expected,
                                      const ChunkedArray& actual);
 ARROW_EXPORT void AssertChunkedEqual(const ChunkedArray& actual,
@@ -193,9 +191,6 @@ void AssertNumericDataEqual(const C_TYPE* raw_data,
     ++raw_data;
   }
 }
-
-ARROW_EXPORT void CompareBatch(const RecordBatch& left, const RecordBatch& right,
-                               bool compare_metadata = true);
 
 // Check if the padding of the buffers of the array is zero.
 // Also cause valgrind warnings if the padding bytes are uninitialized.
@@ -221,9 +216,6 @@ void FinishAndCheckPadding(BuilderType* builder, std::shared_ptr<Array>* out) {
 ARROW_EXPORT
   std::shared_ptr<Array> ArrayFromJSON(const std::shared_ptr<DataType>&,
                                        util::string_view json);
-
-ARROW_EXPORT std::shared_ptr<RecordBatch> RecordBatchFromJSON(
-  const std::shared_ptr<Schema>&, util::string_view);
 
 ARROW_EXPORT
   std::shared_ptr<ChunkedArray> ChunkedArrayFromJSON(const std::shared_ptr<DataType>&,

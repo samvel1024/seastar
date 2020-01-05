@@ -22,7 +22,6 @@
 #include <utility>
 
 #include <seastar/parquet/arrow/status.h>
-#include <seastar/parquet/arrow/util/compare.h>
 #include <seastar/parquet/arrow/util/macros.h>
 #include <seastar/parquet/arrow/util/variant.h>
 
@@ -87,7 +86,7 @@ ARROW_EXPORT void DieWithMessage(const std::string& msg);
 ///   arrow::Result<int> CalculateFoo();
 /// ```
 template <class T>
-class Result : public util::EqualityComparable<Result<T>> {
+class Result {
   template <typename U>
   friend class Result;
   using VariantType = arrow::util::variant<T, Status, const char*>;

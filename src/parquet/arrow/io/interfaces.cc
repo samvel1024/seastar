@@ -27,7 +27,6 @@
 
 #include <seastar/parquet/arrow/buffer.h>
 #include <seastar/parquet/arrow/io/concurrency.h>
-#include <seastar/parquet/arrow/io/util_internal.h>
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/util/logging.h>
 #include <seastar/parquet/arrow/util/string_view.h>

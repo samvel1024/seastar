@@ -435,24 +435,6 @@ int StructType::GetChildIndex(const std::string& name) const {
 }
 
 // ----------------------------------------------------------------------
-// Decimal128 type
-
-Decimal128Type::Decimal128Type(int32_t precision, int32_t scale)
-    : DecimalType(16, precision, scale) {
-  ARROW_CHECK_GE(precision, kMinPrecision);
-  ARROW_CHECK_LE(precision, kMaxPrecision);
-}
-
-Status Decimal128Type::Make(int32_t precision, int32_t scale,
-                            std::shared_ptr<DataType>* out) {
-  if (precision < kMinPrecision || precision > kMaxPrecision) {
-    return Status::Invalid("Decimal precision out of range: ", precision);
-  }
-  *out = std::make_shared<Decimal128Type>(precision, scale);
-  return Status::OK();
-}
-
-// ----------------------------------------------------------------------
 // Dictionary-encoded type
 
 int DictionaryType::bit_width() const {
@@ -1216,16 +1198,6 @@ std::shared_ptr<Field> field(const std::string& name,
                              const std::shared_ptr<DataType>& type, bool nullable,
                              const std::shared_ptr<const KeyValueMetadata>& metadata) {
   return std::make_shared<Field>(name, type, nullable, metadata);
-}
-
-std::shared_ptr<DataType> decimal(int32_t precision, int32_t scale) {
-  return std::make_shared<Decimal128Type>(precision, scale);
-}
-
-std::string Decimal128Type::ToString() const {
-  std::stringstream s;
-  s << "decimal(" << precision_ << ", " << scale_ << ")";
-  return s.str();
 }
 
 }  // namespace arrow

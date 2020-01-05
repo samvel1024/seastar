@@ -38,13 +38,8 @@ class Array;
 struct ArrayData;
 class ArrayBuilder;
 class Field;
-class Tensor;
 
 class ChunkedArray;
-class RecordBatch;
-class Table;
-
-using RecordBatchIterator = Iterator<std::shared_ptr<RecordBatch>>;
 
 class Buffer;
 class MemoryPool;
@@ -114,11 +109,6 @@ class StructType;
 class StructArray;
 class StructBuilder;
 struct StructScalar;
-
-class Decimal128Type;
-class Decimal128Array;
-class Decimal128Builder;
-struct Decimal128Scalar;
 
 class UnionType;
 class UnionArray;

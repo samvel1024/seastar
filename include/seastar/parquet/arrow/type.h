@@ -900,26 +900,6 @@ class ARROW_EXPORT DecimalType : public FixedSizeBinaryType {
   int32_t scale_;
 };
 
-/// \brief Concrete type class for 128-bit decimal data
-class ARROW_EXPORT Decimal128Type : public DecimalType {
- public:
-  static constexpr Type::type type_id = Type::DECIMAL;
-
-  static constexpr const char* type_name() { return "decimal"; }
-
-  /// Decimal128Type constructor that aborts on invalid input.
-  explicit Decimal128Type(int32_t precision, int32_t scale);
-
-  /// Decimal128Type constructor that returns an error on invalid input.
-  static Status Make(int32_t precision, int32_t scale, std::shared_ptr<DataType>* out);
-
-  std::string ToString() const override;
-  std::string name() const override { return "decimal"; }
-
-  static constexpr int32_t kMinPrecision = 1;
-  static constexpr int32_t kMaxPrecision = 38;
-};
-
 struct UnionMode {
   enum type { SPARSE, DENSE };
 };
@@ -1307,7 +1287,6 @@ class ARROW_EXPORT DictionaryUnifier {
 /// \brief Sequence of arrow::Field objects describing the columns of a record
 /// batch or table data structure
 class ARROW_EXPORT Schema : public detail::Fingerprintable,
-                            public util::EqualityComparable<Schema>,
                             public util::ToStringOstreamable<Schema> {
  public:
   explicit Schema(const std::vector<std::shared_ptr<Field>>& fields,
@@ -1395,10 +1374,6 @@ class ARROW_EXPORT Schema : public detail::Fingerprintable,
 /// \brief Create a FixedSizeBinaryType instance.
 ARROW_EXPORT
 std::shared_ptr<DataType> fixed_size_binary(int32_t byte_width);
-
-/// \brief Create a Decimal128Type instance
-ARROW_EXPORT
-std::shared_ptr<DataType> decimal(int32_t precision, int32_t scale);
 
 /// \brief Create a ListType instance from its child Field type
 ARROW_EXPORT

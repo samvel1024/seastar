@@ -245,6 +245,12 @@ ARROW_EXPORT
 Status MakeInputStreamIterator(std::shared_ptr<InputStream> stream, int64_t block_size,
                                Iterator<std::shared_ptr<Buffer>>* out);
 
+namespace internal {
+
+ARROW_EXPORT void CloseFromDestructor(FileInterface* file);
+
+}  // namespace internal
+
 }  // namespace io
 }  // namespace arrow
 

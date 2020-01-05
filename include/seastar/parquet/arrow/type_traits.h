@@ -229,14 +229,6 @@ struct TypeTraits<HalfFloatType> {
 };
 
 template <>
-struct TypeTraits<Decimal128Type> {
-  using ArrayType = Decimal128Array;
-  using BuilderType = Decimal128Builder;
-  using ScalarType = Decimal128Scalar;
-  constexpr static bool is_parameter_free = false;
-};
-
-template <>
 struct TypeTraits<BinaryType> {
   using ArrayType = BinaryArray;
   using BuilderType = BinaryBuilder;

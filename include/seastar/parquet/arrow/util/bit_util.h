@@ -67,7 +67,6 @@
 #include <vector>
 
 #include <seastar/parquet/arrow/buffer.h>
-#include <seastar/parquet/arrow/util/compare.h>
 #include <seastar/parquet/arrow/util/macros.h>
 #include <seastar/parquet/arrow/util/string_builder.h>
 #include <seastar/parquet/arrow/util/string_view.h>
@@ -837,8 +836,7 @@ Status InvertBitmap(MemoryPool* pool, const uint8_t* bitmap, int64_t offset,
 ARROW_EXPORT
 int64_t CountSetBits(const uint8_t* data, int64_t bit_offset, int64_t length);
 
-class ARROW_EXPORT Bitmap : public util::ToStringOstreamable<Bitmap>,
-                            public util::EqualityComparable<Bitmap> {
+class ARROW_EXPORT Bitmap : public util::ToStringOstreamable<Bitmap> {
  public:
   template <typename Word>
   using View = util::basic_string_view<Word>;

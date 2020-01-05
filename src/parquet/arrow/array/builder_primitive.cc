@@ -30,7 +30,6 @@
 #include <seastar/parquet/arrow/type.h>
 #include <seastar/parquet/arrow/type_traits.h>
 #include <seastar/parquet/arrow/util/bit_util.h>
-#include <seastar/parquet/arrow/util/int_util.h>
 #include <seastar/parquet/arrow/util/logging.h>
 
 namespace arrow {
