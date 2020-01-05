@@ -26,7 +26,6 @@
 #include <seastar/parquet/arrow/array/builder_nested.h>     // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_primitive.h>  // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_time.h>       // IWYU pragma: export
-#include <seastar/parquet/arrow/array/builder_union.h>      // IWYU pragma: export
 #include <seastar/parquet/arrow/status.h>
 #include <seastar/parquet/arrow/util/visibility.h>
 

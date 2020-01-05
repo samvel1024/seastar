@@ -172,22 +172,6 @@ class TypeEqualsVisitor {
 
   Status Visit(const StructType& left) { return VisitChildren(left); }
 
-  Status Visit(const UnionType& left) {
-    const auto& right = checked_cast<const UnionType&>(right_);
-
-    if (left.mode() != right.mode() || left.type_codes() != right.type_codes()) {
-      result_ = false;
-      return Status::OK();
-    }
-
-    result_ = std::equal(
-        left.children().begin(), left.children().end(), right.children().begin(),
-        [this](const std::shared_ptr<Field>& l, const std::shared_ptr<Field>& r) {
-          return l->Equals(r, check_metadata_);
-        });
-    return Status::OK();
-  }
-
   Status Visit(const DictionaryType& left) {
     const auto& right = checked_cast<const DictionaryType&>(right_);
     result_ = left.index_type()->Equals(right.index_type()) &&
@@ -314,56 +298,6 @@ class RangeEqualsVisitor {
     return true;
   }
 
-  bool CompareUnions(const UnionArray& left) const {
-    const auto& right = checked_cast<const UnionArray&>(right_);
-
-    const UnionMode::type union_mode = left.mode();
-    if (union_mode != right.mode()) {
-      return false;
-    }
-
-    const auto& left_type = checked_cast<const UnionType&>(*left.type());
-
-    // Define a mapping from the type id to child number
-    const std::vector<uint8_t>& type_codes = left_type.type_codes();
-    std::vector<uint8_t> type_id_to_child_num(left.union_type()->max_type_code() + 1, 0);
-    for (uint8_t i = 0; i < type_codes.size(); ++i) {
-      type_id_to_child_num[type_codes[i]] = i;
-    }
-
-    const uint8_t* left_ids = left.raw_type_ids();
-    const uint8_t* right_ids = right.raw_type_ids();
-
-    for (int64_t i = left_start_idx_, o_i = right_start_idx_; i < left_end_idx_;
-         ++i, ++o_i) {
-      if (left.IsNull(i) != right.IsNull(o_i)) {
-        return false;
-      }
-      if (left.IsNull(i)) continue;
-      if (left_ids[i] != right_ids[o_i]) {
-        return false;
-      }
-
-      auto child_num = type_id_to_child_num[left_ids[i]];
-
-      // TODO(wesm): really we should be comparing stretches of non-null data
-      // rather than looking at one value at a time.
-      if (union_mode == UnionMode::SPARSE) {
-        if (!left.child(child_num)->RangeEquals(i, i + 1, o_i, right.child(child_num))) {
-          return false;
-        }
-      } else {
-        const int32_t offset = left.raw_value_offsets()[i];
-        const int32_t o_offset = right.raw_value_offsets()[o_i];
-        if (!left.child(child_num)->RangeEquals(offset, offset + 1, o_offset,
-                                                right.child(child_num))) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
   Status Visit(const BinaryArray& left) {
     result_ = CompareBinaryRange(left);
     return Status::OK();
@@ -440,11 +374,6 @@ class RangeEqualsVisitor {
 
   Status Visit(const StructArray& left) {
     result_ = CompareStructs(left);
-    return Status::OK();
-  }
-
-  Status Visit(const UnionArray& left) {
-    result_ = CompareUnions(left);
     return Status::OK();
   }
 

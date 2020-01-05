@@ -648,138 +648,6 @@ Status StructArray::Flatten(MemoryPool* pool, ArrayVector* out) const {
 }
 
 // ----------------------------------------------------------------------
-// UnionArray
-
-void UnionArray::SetData(const std::shared_ptr<ArrayData>& data) {
-  this->Array::SetData(data);
-
-  ARROW_CHECK_EQ(data->type->id(), Type::UNION);
-  ARROW_CHECK_EQ(data->buffers.size(), 3);
-  union_type_ = checked_cast<const UnionType*>(data_->type.get());
-
-  auto type_ids = data_->buffers[1];
-  auto value_offsets = data_->buffers[2];
-  raw_type_ids_ =
-      type_ids == nullptr ? nullptr : reinterpret_cast<const uint8_t*>(type_ids->data());
-  raw_value_offsets_ = value_offsets == nullptr
-                           ? nullptr
-                           : reinterpret_cast<const int32_t*>(value_offsets->data());
-  boxed_fields_.resize(data->child_data.size());
-}
-
-UnionArray::UnionArray(const std::shared_ptr<ArrayData>& data) { SetData(data); }
-
-UnionArray::UnionArray(const std::shared_ptr<DataType>& type, int64_t length,
-                       const std::vector<std::shared_ptr<Array>>& children,
-                       const std::shared_ptr<Buffer>& type_ids,
-                       const std::shared_ptr<Buffer>& value_offsets,
-                       const std::shared_ptr<Buffer>& null_bitmap, int64_t null_count,
-                       int64_t offset) {
-  auto internal_data = ArrayData::Make(
-      type, length, {null_bitmap, type_ids, value_offsets}, null_count, offset);
-  for (const auto& child : children) {
-    internal_data->child_data.push_back(child->data());
-  }
-  SetData(internal_data);
-}
-
-Status UnionArray::MakeDense(const Array& type_ids, const Array& value_offsets,
-                             const std::vector<std::shared_ptr<Array>>& children,
-                             const std::vector<std::string>& field_names,
-                             const std::vector<uint8_t>& type_codes,
-                             std::shared_ptr<Array>* out) {
-  if (value_offsets.length() == 0) {
-    return Status::Invalid("UnionArray offsets must have non-zero length");
-  }
-
-  if (value_offsets.type_id() != Type::INT32) {
-    return Status::TypeError("UnionArray offsets must be signed int32");
-  }
-
-  if (type_ids.type_id() != Type::INT8) {
-    return Status::TypeError("UnionArray type_ids must be signed int8");
-  }
-
-  if (value_offsets.null_count() != 0) {
-    return Status::Invalid("MakeDense does not allow NAs in value_offsets");
-  }
-
-  if (field_names.size() > 0 && field_names.size() != children.size()) {
-    return Status::Invalid("field_names must have the same length as children");
-  }
-
-  if (type_codes.size() > 0 && type_codes.size() != children.size()) {
-    return Status::Invalid("type_codes must have the same length as children");
-  }
-
-  BufferVector buffers = {type_ids.null_bitmap(),
-                          checked_cast<const Int8Array&>(type_ids).values(),
-                          checked_cast<const Int32Array&>(value_offsets).values()};
-
-  std::shared_ptr<DataType> union_type =
-      union_(children, field_names, type_codes, UnionMode::DENSE);
-  auto internal_data = ArrayData::Make(union_type, type_ids.length(), std::move(buffers),
-                                       type_ids.null_count(), type_ids.offset());
-  for (const auto& child : children) {
-    internal_data->child_data.push_back(child->data());
-  }
-  *out = std::make_shared<UnionArray>(internal_data);
-  return Status::OK();
-}
-
-Status UnionArray::MakeSparse(const Array& type_ids,
-                              const std::vector<std::shared_ptr<Array>>& children,
-                              const std::vector<std::string>& field_names,
-                              const std::vector<uint8_t>& type_codes,
-                              std::shared_ptr<Array>* out) {
-  if (type_ids.type_id() != Type::INT8) {
-    return Status::TypeError("UnionArray type_ids must be signed int8");
-  }
-
-  if (field_names.size() > 0 && field_names.size() != children.size()) {
-    return Status::Invalid("field_names must have the same length as children");
-  }
-
-  if (type_codes.size() > 0 && type_codes.size() != children.size()) {
-    return Status::Invalid("type_codes must have the same length as children");
-  }
-
-  BufferVector buffers = {type_ids.null_bitmap(),
-                          checked_cast<const Int8Array&>(type_ids).values(), nullptr};
-  std::shared_ptr<DataType> union_type =
-      union_(children, field_names, type_codes, UnionMode::SPARSE);
-  auto internal_data = ArrayData::Make(union_type, type_ids.length(), std::move(buffers),
-                                       type_ids.null_count(), type_ids.offset());
-  for (const auto& child : children) {
-    internal_data->child_data.push_back(child->data());
-    if (child->length() != type_ids.length()) {
-      return Status::Invalid(
-          "Sparse UnionArray must have len(child) == len(type_ids) for all children");
-    }
-  }
-  *out = std::make_shared<UnionArray>(internal_data);
-  return Status::OK();
-}
-
-std::shared_ptr<Array> UnionArray::child(int i) const {
-  std::shared_ptr<Array> result = std::atomic_load(&boxed_fields_[i]);
-  if (!result) {
-    std::shared_ptr<ArrayData> child_data = data_->child_data[i]->Copy();
-    if (mode() == UnionMode::SPARSE) {
-      // Sparse union: need to adjust child if union is sliced
-      // (for dense unions, the need to lookup through the offsets
-      //  makes this unnecessary)
-      if (data_->offset != 0 || child_data->length > data_->length) {
-        *child_data = child_data->Slice(data_->offset, data_->length);
-      }
-    }
-    result = MakeArray(child_data);
-    std::atomic_store(&boxed_fields_[i], result);
-  }
-  return result;
-}
-
-// ----------------------------------------------------------------------
 // DictionaryArray
 
 /// \brief Perform validation check to determine if all dictionary indices
@@ -1215,8 +1083,6 @@ struct ValidateVisitor {
     return Status::OK();
   }
 
-  Status Visit(const UnionArray& array) { return Status::OK(); }
-
   Status Visit(const DictionaryArray& array) {
     Type::type index_type_id = array.indices()->type()->id();
     if (!is_integer(index_type_id)) {
@@ -1410,19 +1276,6 @@ class NullArrayFactory {
       return Status::OK();
     }
 
-    Status Visit(const UnionType& type) {
-      // type codes
-      RETURN_NOT_OK(MaxOf(length_));
-      if (type.mode() == UnionMode::DENSE) {
-        // offsets
-        RETURN_NOT_OK(MaxOf(sizeof(int32_t) * length_));
-      }
-      for (const auto& child : type.children()) {
-        RETURN_NOT_OK(MaxOf(GetBufferLength(child->type(), length_)));
-      }
-      return Status::OK();
-    }
-
     Status Visit(const DictionaryType& type) {
       RETURN_NOT_OK(MaxOf(GetBufferLength(type.value_type(), length_)));
       return MaxOf(GetBufferLength(type.index_type(), length_));
@@ -1494,19 +1347,6 @@ class NullArrayFactory {
   }
 
   Status Visit(const StructType& type) {
-    for (int i = 0; i < type_->num_children(); ++i) {
-      RETURN_NOT_OK(CreateChild(i, length_, &(*out_)->child_data[i]));
-    }
-    return Status::OK();
-  }
-
-  Status Visit(const UnionType& type) {
-    if (type.mode() == UnionMode::DENSE) {
-      (*out_)->buffers.resize(3, buffer_);
-    } else {
-      (*out_)->buffers = {buffer_, buffer_, nullptr};
-    }
-
     for (int i = 0; i < type_->num_children(); ++i) {
       RETURN_NOT_OK(CreateChild(i, length_, &(*out_)->child_data[i]));
     }

@@ -345,13 +345,6 @@ struct TypeTraits<StructType> {
 };
 
 template <>
-struct TypeTraits<UnionType> {
-  using ArrayType = UnionArray;
-  using ScalarType = UnionScalar;
-  constexpr static bool is_parameter_free = false;
-};
-
-template <>
 struct TypeTraits<DictionaryType> {
   using ArrayType = DictionaryArray;
   using ScalarType = DictionaryScalar;

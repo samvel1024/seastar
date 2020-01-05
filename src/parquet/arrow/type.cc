@@ -286,51 +286,6 @@ std::string DurationType::ToString() const {
 }
 
 // ----------------------------------------------------------------------
-// Union type
-
-UnionType::UnionType(const std::vector<std::shared_ptr<Field>>& fields,
-                     const std::vector<uint8_t>& type_codes, UnionMode::type mode)
-    : NestedType(Type::UNION), mode_(mode), type_codes_(type_codes) {
-  DCHECK_LE(fields.size(), type_codes.size()) << "union field with unknown type id";
-  DCHECK_GE(fields.size(), type_codes.size())
-      << "type id provided without corresponding union field";
-  children_ = fields;
-}
-
-DataTypeLayout UnionType::layout() const {
-  if (mode_ == UnionMode::SPARSE) {
-    return {{1, CHAR_BIT, DataTypeLayout::kAlwaysNullBuffer}, false};
-  } else {
-    return {{1, CHAR_BIT, sizeof(int32_t) * CHAR_BIT}, false};
-  }
-}
-
-uint8_t UnionType::max_type_code() const {
-  return type_codes_.size() == 0
-             ? 0
-             : *std::max_element(type_codes_.begin(), type_codes_.end());
-}
-
-std::string UnionType::ToString() const {
-  std::stringstream s;
-
-  if (mode_ == UnionMode::SPARSE) {
-    s << "union[sparse]<";
-  } else {
-    s << "union[dense]<";
-  }
-
-  for (size_t i = 0; i < children_.size(); ++i) {
-    if (i) {
-      s << ", ";
-    }
-    s << children_[i]->ToString() << "=" << static_cast<int>(type_codes_[i]);
-  }
-  s << ">";
-  return s.str();
-}
-
-// ----------------------------------------------------------------------
 // Struct type
 
 namespace {
@@ -1006,35 +961,6 @@ std::string StructType::ComputeFingerprint() const {
   return ss.str();
 }
 
-std::string UnionType::ComputeFingerprint() const {
-  std::stringstream ss;
-  ss << TypeIdFingerprint(*this);
-  switch (mode_) {
-    case UnionMode::SPARSE:
-      ss << "[s";
-      break;
-    case UnionMode::DENSE:
-      ss << "[d";
-      break;
-    default:
-      DCHECK(false) << "Unexpected UnionMode";
-  }
-  for (const auto code : type_codes_) {
-    // Represent code as integer, not raw character
-    ss << ':' << static_cast<uint32_t>(code);
-  }
-  ss << "]{";
-  for (const auto& child : children_) {
-    const auto& child_fingerprint = child->fingerprint();
-    if (child_fingerprint.empty()) {
-      return "";
-    }
-    ss << child_fingerprint << ";";
-  }
-  ss << "}";
-  return ss.str();
-}
-
 std::string TimeType::ComputeFingerprint() const {
   std::stringstream ss;
   ss << TypeIdFingerprint(*this) << TimeUnitFingerprint(unit_);
@@ -1159,33 +1085,6 @@ std::shared_ptr<DataType> fixed_size_list(const std::shared_ptr<Field>& value_fi
 
 std::shared_ptr<DataType> struct_(const std::vector<std::shared_ptr<Field>>& fields) {
   return std::make_shared<StructType>(fields);
-}
-
-std::shared_ptr<DataType> union_(const std::vector<std::shared_ptr<Field>>& child_fields,
-                                 const std::vector<uint8_t>& type_codes,
-                                 UnionMode::type mode) {
-  return std::make_shared<UnionType>(child_fields, type_codes, mode);
-}
-
-std::shared_ptr<DataType> union_(const std::vector<std::shared_ptr<Array>>& children,
-                                 const std::vector<std::string>& field_names,
-                                 const std::vector<uint8_t>& given_type_codes,
-                                 UnionMode::type mode) {
-  std::vector<std::shared_ptr<Field>> fields;
-  std::vector<uint8_t> type_codes(given_type_codes);
-  uint8_t counter = 0;
-  for (const auto& child : children) {
-    if (field_names.size() == 0) {
-      fields.push_back(field(std::to_string(counter), child->type()));
-    } else {
-      fields.push_back(field(std::move(field_names[counter]), child->type()));
-    }
-    if (given_type_codes.size() == 0) {
-      type_codes.push_back(counter);
-    }
-    counter++;
-  }
-  return union_(fields, std::move(type_codes), mode);
 }
 
 std::shared_ptr<DataType> dictionary(const std::shared_ptr<DataType>& index_type,

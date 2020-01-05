@@ -110,10 +110,6 @@ class StructArray;
 class StructBuilder;
 struct StructScalar;
 
-class UnionType;
-class UnionArray;
-class UnionScalar;
-
 template <typename TypeClass>
 class NumericArray;
 

@@ -65,7 +65,6 @@ namespace arrow {
   ACTION(Map);                                  \
   ACTION(FixedSizeList);                        \
   ACTION(Struct);                               \
-  ACTION(Union);                                \
   ACTION(Dictionary);                           \
 
 #define TYPE_VISIT_INLINE(TYPE_CLASS) \

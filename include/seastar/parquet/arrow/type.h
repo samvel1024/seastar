@@ -125,9 +125,6 @@ struct Type {
     /// Struct of logical types
     STRUCT,
 
-    /// Unions of logical types
-    UNION,
-
     /// Dictionary-encoded type, also called "categorical" or "factor"
     /// in other programming languages. Holds the dictionary value
     /// type but not the dictionary itself, which is part of the
@@ -900,43 +897,6 @@ class ARROW_EXPORT DecimalType : public FixedSizeBinaryType {
   int32_t scale_;
 };
 
-struct UnionMode {
-  enum type { SPARSE, DENSE };
-};
-
-/// \brief Concrete type class for union data
-class ARROW_EXPORT UnionType : public NestedType {
- public:
-  static constexpr Type::type type_id = Type::UNION;
-
-  static constexpr const char* type_name() { return "union"; }
-
-  UnionType(const std::vector<std::shared_ptr<Field>>& fields,
-            const std::vector<uint8_t>& type_codes,
-            UnionMode::type mode = UnionMode::SPARSE);
-
-  DataTypeLayout layout() const override;
-
-  std::string ToString() const override;
-  std::string name() const override { return "union"; }
-
-  const std::vector<uint8_t>& type_codes() const { return type_codes_; }
-
-  uint8_t max_type_code() const;
-
-  UnionMode::type mode() const { return mode_; }
-
- private:
-  std::string ComputeFingerprint() const override;
-
-  UnionMode::type mode_;
-
-  // The type id used in the data to indicate each data type in the union. For
-  // example, the first type in the union might be denoted by the id 5 (instead
-  // of 0).
-  std::vector<uint8_t> type_codes_;
-};
-
 // ----------------------------------------------------------------------
 // Date and time types
 
@@ -1437,32 +1397,6 @@ std::shared_ptr<DataType> ARROW_EXPORT time64(TimeUnit::type unit);
 /// \brief Create a StructType instance
 std::shared_ptr<DataType> ARROW_EXPORT
 struct_(const std::vector<std::shared_ptr<Field>>& fields);
-
-/// \brief Create a UnionType instance
-std::shared_ptr<DataType> ARROW_EXPORT
-union_(const std::vector<std::shared_ptr<Field>>& child_fields,
-       const std::vector<uint8_t>& type_codes, UnionMode::type mode = UnionMode::SPARSE);
-
-/// \brief Create a UnionType instance
-std::shared_ptr<DataType> ARROW_EXPORT
-union_(const std::vector<std::shared_ptr<Array>>& children,
-       const std::vector<std::string>& field_names,
-       const std::vector<uint8_t>& type_codes, UnionMode::type mode = UnionMode::SPARSE);
-
-/// \brief Create a UnionType instance
-inline std::shared_ptr<DataType> ARROW_EXPORT
-union_(const std::vector<std::shared_ptr<Array>>& children,
-       const std::vector<std::string>& field_names,
-       UnionMode::type mode = UnionMode::SPARSE) {
-  return union_(children, field_names, {}, mode);
-}
-
-/// \brief Create a UnionType instance
-inline std::shared_ptr<DataType> ARROW_EXPORT
-union_(const std::vector<std::shared_ptr<Array>>& children,
-       UnionMode::type mode = UnionMode::SPARSE) {
-  return union_(children, {}, {}, mode);
-}
 
 /// \brief Create a DictionaryType instance
 /// \param[in] index_type the type of the dictionary indices (must be

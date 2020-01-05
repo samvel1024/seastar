@@ -433,7 +433,6 @@ src/parquet/arrow/array/builder_binary.cc
 src/parquet/arrow/array/builder_dict.cc
 src/parquet/arrow/array/builder_nested.cc
 src/parquet/arrow/array/builder_primitive.cc
-src/parquet/arrow/array/builder_union.cc
 src/parquet/arrow/array/dict_internal.cc
 src/parquet/arrow/buffer.cc
 src/parquet/arrow/builder.cc
@@ -489,7 +488,6 @@ include/seastar/parquet/arrow/array/builder_dict.h
 include/seastar/parquet/arrow/array/builder_nested.h
 include/seastar/parquet/arrow/array/builder_primitive.h
 include/seastar/parquet/arrow/array/builder_time.h
-include/seastar/parquet/arrow/array/builder_union.h
 include/seastar/parquet/arrow/array/dict_internal.h
 include/seastar/parquet/arrow/buffer.h
 include/seastar/parquet/arrow/buffer_builder.h
@@ -500,7 +498,6 @@ include/seastar/parquet/arrow/io/concurrency.h
 include/seastar/parquet/arrow/io/file.h
 include/seastar/parquet/arrow/io/interfaces.h
 include/seastar/parquet/arrow/io/memory.h
-include/seastar/parquet/arrow/io/util_internal.h
 include/seastar/parquet/arrow/memory_pool.h
 include/seastar/parquet/arrow/result.h
 include/seastar/parquet/arrow/status.h
