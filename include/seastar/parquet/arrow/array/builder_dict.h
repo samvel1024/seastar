@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <memory>
 
-#include <seastar/parquet/arrow/array/builder_adaptive.h>   // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_base.h>       // IWYU pragma: export
 #include <seastar/parquet/arrow/array/builder_primitive.h>  // IWYU pragma: export
 
@@ -382,28 +381,6 @@ class DictionaryBuilderBase<BuilderType, NullType> : public ArrayBuilder {
 
 }  // namespace internal
 
-/// \brief A DictionaryArray builder that uses AdaptiveIntBuilder to return the
-/// smallest index size that can accommodate the dictionary indices
-template <typename T>
-class DictionaryBuilder : public internal::DictionaryBuilderBase<AdaptiveIntBuilder, T> {
- public:
-  using BASE = internal::DictionaryBuilderBase<AdaptiveIntBuilder, T>;
-  using BASE::BASE;
-
-  /// \brief Append dictionary indices directly without modifying memo
-  ///
-  /// NOTE: Experimental API
-  Status AppendIndices(const int64_t* values, int64_t length,
-                       const uint8_t* valid_bytes = NULLPTR) {
-    int64_t null_count_before = this->indices_builder_.null_count();
-    ARROW_RETURN_NOT_OK(this->indices_builder_.AppendValues(values, length, valid_bytes));
-    this->capacity_ = this->indices_builder_.capacity();
-    this->length_ += length;
-    this->null_count_ += this->indices_builder_.null_count() - null_count_before;
-    return Status::OK();
-  }
-};
-
 /// \brief A DictionaryArray builder that always returns int32 dictionary
 /// indices so that data cast to dictionary form will have a consistent index
 /// type, e.g. for creating a ChunkedArray
@@ -433,25 +410,6 @@ class Dictionary32Builder : public internal::DictionaryBuilderBase<Int32Builder,
 namespace internal {
 
 template <typename T>
-class BinaryDictionaryBuilderImpl : public DictionaryBuilder<T> {
- public:
-  using BASE = DictionaryBuilder<T>;
-  using BASE::Append;
-  using BASE::AppendIndices;
-  using BASE::BASE;
-
-  BinaryDictionaryBuilderImpl() : BinaryDictionaryBuilderImpl(default_memory_pool()) {}
-
-  Status Append(const uint8_t* value, int32_t length) {
-    return Append(reinterpret_cast<const char*>(value), length);
-  }
-
-  Status Append(const char* value, int32_t length) {
-    return Append(util::string_view(value, length));
-  }
-};
-
-template <typename T>
 class BinaryDictionary32BuilderImpl : public Dictionary32Builder<T> {
  public:
   using BASE = Dictionary32Builder<T>;
@@ -472,16 +430,6 @@ class BinaryDictionary32BuilderImpl : public Dictionary32Builder<T> {
 };
 
 }  // namespace internal
-
-class BinaryDictionaryBuilder : public internal::BinaryDictionaryBuilderImpl<BinaryType> {
-  using BASE = internal::BinaryDictionaryBuilderImpl<BinaryType>;
-  using BASE::BASE;
-};
-
-class StringDictionaryBuilder : public internal::BinaryDictionaryBuilderImpl<StringType> {
-  using BASE = BinaryDictionaryBuilderImpl<StringType>;
-  using BASE::BASE;
-};
 
 class BinaryDictionary32Builder
     : public internal::BinaryDictionary32BuilderImpl<BinaryType> {

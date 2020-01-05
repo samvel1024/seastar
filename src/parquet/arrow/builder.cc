@@ -36,25 +36,13 @@ class MemoryPool;
 
 struct DictionaryBuilderCase {
   template <typename ValueType>
-  Status Visit(const ValueType&, typename ValueType::c_type* = nullptr) {
-    return CreateFor<ValueType>();
-  }
 
-  Status Visit(const BinaryType&) { return Create<BinaryDictionaryBuilder>(); }
-  Status Visit(const StringType&) { return Create<StringDictionaryBuilder>(); }
-  Status Visit(const FixedSizeBinaryType&) { return CreateFor<FixedSizeBinaryType>(); }
-
+  Status Visit(const ValueType& value_type) { return NotImplemented(value_type); }
   Status Visit(const DataType& value_type) { return NotImplemented(value_type); }
-  Status Visit(const HalfFloatType& value_type) { return NotImplemented(value_type); }
   Status NotImplemented(const DataType& value_type) {
     return Status::NotImplemented(
         "MakeBuilder: cannot construct builder for dictionaries with value type ",
         value_type);
-  }
-
-  template <typename ValueType>
-  Status CreateFor() {
-    return Create<DictionaryBuilder<ValueType>>();
   }
 
   template <typename BuilderType>

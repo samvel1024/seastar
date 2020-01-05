@@ -427,7 +427,6 @@ src/parquet/parquet/schema.cc
 src/parquet/parquet/statistics.cc
 src/parquet/parquet/types.cc
 src/parquet/arrow/array.cc
-src/parquet/arrow/array/builder_adaptive.cc
 src/parquet/arrow/array/builder_base.cc
 src/parquet/arrow/array/builder_binary.cc
 src/parquet/arrow/array/builder_dict.cc
@@ -481,7 +480,6 @@ include/seastar/parquet/parquet/statistics.h
 include/seastar/parquet/parquet/thrift_internal.h
 include/seastar/parquet/parquet/types.h
 include/seastar/parquet/arrow/array.h
-include/seastar/parquet/arrow/array/builder_adaptive.h
 include/seastar/parquet/arrow/array/builder_base.h
 include/seastar/parquet/arrow/array/builder_binary.h
 include/seastar/parquet/arrow/array/builder_dict.h
