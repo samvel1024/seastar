@@ -413,8 +413,8 @@ function(parquet_add_test name src)
     SOURCES
     ${src}
     LIBRARIES
-    gtest crypto parquet_testing)
-  # TODO [PQ] does crypto really belong to here ?
+    gtest
+    parquet_testing)
 endfunction()
 parquet_add_test(parquet_column_reader parquet/column_reader_test.cc)
 parquet_add_test(parquet_column_writer parquet/column_writer_test.cc)

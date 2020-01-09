@@ -819,6 +819,7 @@ target_link_libraries (seastar
     rt::rt
     yaml-cpp::yaml-cpp
     Snappy::snappy
+    OpenSSL::Crypto
     Thrift::thrift)
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "Sanitize"))
