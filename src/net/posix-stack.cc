@@ -99,10 +99,10 @@ public:
 
 class posix_sctp_connected_socket_operations : public posix_connected_socket_operations {
 public:
-    virtual void set_nodelay(file_desc& _fd, bool nodelay) const {
+    virtual void set_nodelay(file_desc& _fd, bool nodelay) const override {
         _fd.setsockopt(SOL_SCTP, SCTP_NODELAY, int(nodelay));
     }
-    virtual bool get_nodelay(file_desc& _fd) const {
+    virtual bool get_nodelay(file_desc& _fd) const override {
         return _fd.getsockopt<int>(SOL_SCTP, SCTP_NODELAY);
     }
     virtual void set_keepalive(file_desc& _fd, bool keepalive) const override {
@@ -287,7 +287,7 @@ static void resolve_outgoing_address(socket_address& a) {
             break;
         }
 
-        if ((prefix_len < 0 || prefix_len > 128)  || (src_prefix_len != 0)
+        if ((prefix_len > 128)  || (src_prefix_len != 0)
             || (flags & (RTF_POLICY | RTF_FLOW))
             || ((flags & RTF_REJECT) && prefix_len == 0) /* reject all */) {
             continue;
@@ -426,8 +426,17 @@ posix_server_socket_impl::accept() {
     return _lfd.accept().then([this] (std::tuple<pollable_fd, socket_address> fd_sa) {
         auto& fd = std::get<0>(fd_sa);
         auto& sa = std::get<1>(fd_sa);
-        auto cth = _lba == server_socket::load_balancing_algorithm::connection_distribution ?
-                _conntrack.get_handle() : _conntrack.get_handle(ntoh(sa.as_posix_sockaddr_in().sin_port) % smp::count);
+        auto cth = [this, &sa] {
+            switch(_lba) {
+            case server_socket::load_balancing_algorithm::connection_distribution:
+                return _conntrack.get_handle();
+            case server_socket::load_balancing_algorithm::port:
+                return _conntrack.get_handle(ntoh(sa.as_posix_sockaddr_in().sin_port) % smp::count);
+            case server_socket::load_balancing_algorithm::fixed:
+                return _conntrack.get_handle(_fixed_cpu);
+            default: abort();
+            }
+        } ();
         auto cpu = cth.cpu();
         if (cpu == engine().cpu_id()) {
             std::unique_ptr<connected_socket_impl> csi(
@@ -461,7 +470,7 @@ future<accept_result> posix_ap_server_socket_impl::accept() {
         conn_q.erase(conni);
         try {
             std::unique_ptr<connected_socket_impl> csi(
-                    new posix_connected_socket_impl(_sa.family(), _protocol, make_lw_shared(std::move(c.fd)), std::move(c.connection_tracking_handle)));
+                    new posix_connected_socket_impl(_sa.family(), _protocol, make_lw_shared(std::move(c.fd)), std::move(c.connection_tracking_handle), _allocator));
             return make_ready_future<accept_result>(accept_result{connected_socket(std::move(csi)), std::move(c.addr)});
         } catch (...) {
             return make_exception_future<accept_result>(std::current_exception());
@@ -584,13 +593,13 @@ posix_network_stack::listen(socket_address sa, listen_options opt) {
         sa = inet_address(inet_address::family::INET);
     }
     if (sa.is_af_unix()) {
-        return server_socket(std::make_unique<posix_server_socket_impl>(0, sa, engine().posix_listen(sa, opt), opt.lba, _allocator));
+        return server_socket(std::make_unique<posix_server_socket_impl>(0, sa, engine().posix_listen(sa, opt), opt.lba, opt.fixed_cpu, _allocator));
     }
     auto protocol = static_cast<int>(opt.proto);
     return _reuseport ?
         server_socket(std::make_unique<posix_reuseport_server_socket_impl>(protocol, sa, engine().posix_listen(sa, opt), _allocator))
         :
-        server_socket(std::make_unique<posix_server_socket_impl>(protocol, sa, engine().posix_listen(sa, opt), opt.lba, _allocator));
+        server_socket(std::make_unique<posix_server_socket_impl>(protocol, sa, engine().posix_listen(sa, opt), opt.lba, opt.fixed_cpu, _allocator));
 }
 
 ::seastar::socket posix_network_stack::socket() {
@@ -605,13 +614,13 @@ posix_ap_network_stack::listen(socket_address sa, listen_options opt) {
         sa = inet_address(inet_address::family::INET);
     }
     if (sa.is_af_unix()) {
-        return server_socket(std::make_unique<posix_ap_server_socket_impl>(0, sa));
+        return server_socket(std::make_unique<posix_ap_server_socket_impl>(0, sa, _allocator));
     }
     auto protocol = static_cast<int>(opt.proto);
     return _reuseport ?
-        server_socket(std::make_unique<posix_reuseport_server_socket_impl>(protocol, sa, engine().posix_listen(sa, opt)))
+        server_socket(std::make_unique<posix_reuseport_server_socket_impl>(protocol, sa, engine().posix_listen(sa, opt), _allocator))
         :
-        server_socket(std::make_unique<posix_ap_server_socket_impl>(protocol, sa));
+        server_socket(std::make_unique<posix_ap_server_socket_impl>(protocol, sa, _allocator));
 }
 
 struct cmsg_with_pktinfo {
@@ -790,7 +799,7 @@ void register_posix_stack() {
 // nw interface stuff
 
 std::vector<network_interface> posix_network_stack::network_interfaces() {
-    class posix_network_interface_impl : public network_interface_impl {
+    class posix_network_interface_impl final : public network_interface_impl {
     public:
         uint32_t _index = 0, _mtu = 0;
         sstring _name, _display_name;
@@ -860,7 +869,7 @@ std::vector<network_interface> posix_network_stack::network_interfaces() {
                     rtgenmsg gen;
                     ifaddrmsg addr; 
                 }; 
-            } req = { 0, };
+            } req = { {0}, };
 
             sockaddr_nl kernel = { 0, }; 
             msghdr rtnl_msg = { 0, };

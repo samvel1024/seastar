@@ -143,26 +143,7 @@ public:
     /**
      * URL_decode a substring and place it in the given out sstring
      */
-    static bool url_decode(const compat::string_view& in, sstring& out) {
-        size_t pos = 0;
-        char buff[in.length()];
-        for (size_t i = 0; i < in.length(); ++i) {
-            if (in[i] == '%') {
-                if (i + 3 <= in.size()) {
-                    buff[pos++] = hexstr_to_char(in, i + 1);
-                    i += 2;
-                } else {
-                    return false;
-                }
-            } else if (in[i] == '+') {
-                buff[pos++] = ' ';
-            } else {
-                buff[pos++] = in[i];
-            }
-        }
-        out = sstring(buff, pos);
-        return true;
-    }
+    static bool url_decode(const compat::string_view& in, sstring& out);
 
     /**
      * Add a single query parameter to the parameter list
@@ -208,6 +189,7 @@ public:
     }
 
     future<bool> generate_reply(std::unique_ptr<request> req);
+    void generate_error_reply_and_close(std::unique_ptr<request> req, reply::status_type status, const sstring& msg);
 
     future<> write_body();
 
@@ -233,6 +215,7 @@ class http_server {
     bool _stopping = false;
     promise<> _all_connections_stopped;
     future<> _stopped = _all_connections_stopped.get_future();
+    size_t _content_length_limit = std::numeric_limits<size_t>::max();
 private:
     void maybe_idle() {
         if (_stopping && !_connections_being_accepted && !_current_connections) {
@@ -273,6 +256,14 @@ public:
      */
     void set_tls_credentials(shared_ptr<seastar::tls::server_credentials> credentials) {
         _credentials = credentials;
+    }
+
+    size_t get_content_length_limit() const {
+        return _content_length_limit;
+    }
+
+    void set_content_length_limit(size_t limit) {
+        _content_length_limit = limit;
     }
 
     future<> listen(socket_address addr, listen_options lo) {

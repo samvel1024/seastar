@@ -67,7 +67,7 @@ set_property (CACHE Seastar_API_LEVEL
 #
 
 set (CMAKE_CXX_FLAGS_DEV
-  "-O1 -fdiagnostics-color=always"
+  "-O1"
   CACHE
   STRING
   "Flags used by the C++ compiler during dev builds."
@@ -239,6 +239,10 @@ option (Seastar_SPLIT_DWARF
   "Use split dwarf."
   OFF)
 
+option (Seastar_HEAP_PROFILING
+    "Enable heap profiling. No effect when Seastar is compiled with the default allocator."
+    OFF)
+
 set (Seastar_TEST_TIMEOUT
   "300"
   CACHE
@@ -267,6 +271,12 @@ option (Seastar_UNUSED_RESULT_ERROR
   "Make [[nodiscard]] violations an error (instead of a warning)."
   OFF)
 
+set (Seastar_STACK_GUARDS
+  "DEFAULT"
+  CACHE
+  STRING
+  "Enable stack guards. Can be ON, OFF or DEFAULT (which enables it for non release builds)")
+
 # When Seastar is embedded with `add_subdirectory`, disable the non-library targets.
 if (NOT (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
   set (Seastar_APPS OFF)
@@ -294,6 +304,8 @@ seastar_find_dependencies ()
 
 # Private build dependencies not visible to consumers
 find_package (ragel 6.10 REQUIRED)
+find_package (Threads REQUIRED)
+find_package (PthreadSetName REQUIRED)
 
 #
 # Code generation helpers.
@@ -701,10 +713,12 @@ include/seastar/parquet/arrow/visitor_inline.h
   src/core/file-impl.hh
   src/core/fsqual.cc
   src/core/fstream.cc
+  src/core/future.cc
   src/core/future-util.cc
   src/core/linux-aio.cc
   src/core/memory.cc
   src/core/metrics.cc
+  src/core/on_internal_error.cc
   src/core/posix.cc
   src/core/prometheus.cc
   src/core/reactor.cc
@@ -760,9 +774,7 @@ include/seastar/parquet/arrow/visitor_inline.h
   src/util/conversions.cc
   src/util/log.cc
   src/util/program-options.cc
-  src/util/read_first_line.cc
-
-        )
+  src/util/read_first_line.cc)
 
 add_library (Seastar::seastar ALIAS seastar)
 
@@ -785,6 +797,7 @@ set (Seastar_PRIVATE_CXX_FLAGS
   -UNDEBUG
   -Wall
   -Werror
+  -Wno-array-bounds # Disabled because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=93437
   -Wno-error=deprecated-declarations)
 
 if (Seastar_COMPRESS_DEBUG)
@@ -818,9 +831,11 @@ target_link_libraries (seastar
     protobuf::libprotobuf
     rt::rt
     yaml-cpp::yaml-cpp
-    Snappy::snappy
-    OpenSSL::Crypto
-    Thrift::thrift)
+    Threads::Threads
+    snappy.a
+    crypto.a
+    thrift.a
+    )
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "Sanitize"))
   set (Seastar_Sanitizers_OPTIONS ${Sanitizers_COMPILER_OPTIONS})
@@ -924,6 +939,13 @@ if (Seastar_SPLIT_DWARF AND (NOT (CMAKE_BUILD_TYPE STREQUAL "Dev")))
   target_compile_options (seastar PUBLIC "-gsplit-dwarf")
 endif ()
 
+if (Seastar_HEAP_PROFILING)
+    set_property (
+      SOURCE "src/core/memory.cc"
+      PROPERTY
+      COMPILE_DEFINITIONS SEASTAR_HEAPPROF)
+endif ()
+
 if (Seastar_DPDK)
   if (NOT dpdk_FOUND)
     message (FATAL_ERROR "dpdk support is enabled but it is not available!")
@@ -1013,7 +1035,19 @@ if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "Sanitize"
       SEASTAR_DEBUG
       SEASTAR_DEFAULT_ALLOCATOR
       SEASTAR_DEBUG_SHARED_PTR
-      SEASTAR_SHUFFLE_TASK_QUEUE
+      SEASTAR_SHUFFLE_TASK_QUEUE)
+endif ()
+
+if ((Seastar_STACK_GUARDS STREQUAL "ON") OR
+    ((Seastar_STACK_GUARDS STREQUAL "DEFAULT") AND
+      ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
+       (CMAKE_BUILD_TYPE STREQUAL "Sanitize") OR
+       (CMAKE_BUILD_TYPE STREQUAL "Dev"))))
+  target_compile_options (seastar
+    PUBLIC
+      -fstack-clash-protection)
+  target_compile_definitions (seastar
+    PRIVATE
       SEASTAR_THREAD_STACK_GUARDS)
 endif ()
 

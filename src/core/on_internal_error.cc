@@ -15,46 +15,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Copyright (C) 2014 Cloudius Systems, Ltd.
+ * Copyright 2020 ScyllaDB
  */
 
-#pragma once
+#include <seastar/core/on_internal_error.hh>
+#include <seastar/util/backtrace.hh>
+#include <seastar/util/log.hh>
 
-#include <vector>
+#include <atomic>
 
-#include <boost/test/unit_test.hpp>
+static std::atomic<bool> abort_on_internal_error{false};
 
-#include <seastar/core/future.hh>
+using namespace seastar;
 
-#include <seastar/testing/entry_point.hh>
-
-namespace seastar {
-
-namespace testing {
-
-class seastar_test {
-public:
-    seastar_test();
-    virtual ~seastar_test() {}
-    virtual const char* get_test_file() = 0;
-    virtual const char* get_name() = 0;
-    virtual int get_expected_failures() { return 0; }
-    virtual future<> run_test_case() = 0;
-    void run();
-};
-
-const std::vector<seastar_test*>& known_tests();
-
+void seastar::set_abort_on_internal_error(bool do_abort) {
+    abort_on_internal_error.store(do_abort);
 }
 
+void seastar::on_internal_error(logger& logger, compat::string_view msg) {
+    if (abort_on_internal_error.load()) {
+        logger.error("{}, at: {}", msg, current_backtrace());
+        abort();
+    } else {
+        throw_with_backtrace<std::runtime_error>(std::string(msg));
+    }
 }
-
-#ifdef SEASTAR_TESTING_MAIN
-
-int main(int argc, char** argv) {
-    return seastar::testing::entry_point(argc, argv);
-}
-
-#endif // SEASTAR_TESTING_MAIN

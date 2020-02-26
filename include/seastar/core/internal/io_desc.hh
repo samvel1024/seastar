@@ -26,21 +26,10 @@
 
 namespace seastar {
 
-class io_desc {
-    promise<seastar::internal::linux_abi::io_event> _pr;
+class kernel_completion {
+protected:
+    ~kernel_completion() = default;
 public:
-    virtual ~io_desc() = default;
-    virtual void set_exception(std::exception_ptr eptr) {
-        _pr.set_exception(std::move(eptr));
-    }
-
-    virtual void set_value(seastar::internal::linux_abi::io_event& ev) {
-        _pr.set_value(ev);
-    }
-
-    future<seastar::internal::linux_abi::io_event> get_future() {
-        return _pr.get_future();
-    }
+    virtual void complete_with(ssize_t res) = 0;
 };
-
 }

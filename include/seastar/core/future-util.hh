@@ -113,65 +113,17 @@ iterator_range_estimate_vector_capacity(Iterator begin, Iterator end, std::forwa
 class parallel_for_each_state final : private continuation_base<> {
     std::vector<future<>> _incomplete;
     promise<> _result;
-    // use optional<> to avoid out-of-line constructor
-    compat::optional<std::exception_ptr> _ex;
+    std::exception_ptr _ex;
 private:
     // Wait for one of the futures in _incomplete to complete, and then
     // decide what to do: wait for another one, or deliver _result if all
     // are complete.
-    void wait_for_one() {
-        // Process from back to front, on the assumption that the front
-        // futures are likely to complete earlier than the back futures.
-        // If that's indeed the case, then the front futures will be
-        // available and we won't have to wait for them.
-
-        // Skip over futures that happen to be complete already.
-        while (!_incomplete.empty() && _incomplete.back().available()) {
-            if (_incomplete.back().failed()) {
-                add_exception(_incomplete.back().get_exception());
-            }
-            _incomplete.pop_back();
-        }
-
-        // If there's an incompelete future, wait for it.
-        if (!_incomplete.empty()) {
-            internal::set_callback(_incomplete.back(), std::unique_ptr<continuation_base<>>(this));
-            // This future's state will be collected in run_and_dispose(), so we can drop it.
-            _incomplete.pop_back();
-            return;
-        }
-
-        // Everything completed, report a result.
-        if (__builtin_expect(bool(_ex), false)) {
-            _result.set_exception(std::move(*_ex));
-        } else {
-            _result.set_value();
-        }
-        delete this;
-    }
-    virtual void run_and_dispose() noexcept override {
-        if (_state.failed()) {
-            _ex = std::move(_state).get_exception();
-        }
-        _state = {};
-        wait_for_one();
-    }
+    void wait_for_one() noexcept;
+    virtual void run_and_dispose() noexcept override;
 public:
-    void reserve(size_t n) {
-        _incomplete.reserve(n);
-    }
-    void add_exception(std::exception_ptr ex) {
-        _ex = std::move(ex);
-    }
-    void add_future(future<>&& f) {
-        _incomplete.push_back(std::move(f));
-    }
-    future<> get_future() {
-        return _result.get_future();
-    }
-    void start() {
-        wait_for_one();
-    }
+    parallel_for_each_state(size_t n);
+    void add_future(future<>&& f);
+    future<> get_future();
 };
 
 /// \endcond
@@ -181,7 +133,9 @@ public:
 /// Given a range [\c begin, \c end) of objects, run \c func on each \c *i in
 /// the range, and return a future<> that resolves when all the functions
 /// complete.  \c func should return a future<> that indicates when it is
-/// complete.  All invocations are performed in parallel.
+/// complete.  All invocations are performed in parallel. This allows the range
+/// to refer to stack objects, but means that unlike other loops this cannot
+/// check need_preempt and can only be used with small ranges.
 ///
 /// \param begin an \c InputIterator designating the beginning of the range
 /// \param end an \c InputIterator designating the end of the range
@@ -196,42 +150,29 @@ inline
 future<>
 parallel_for_each(Iterator begin, Iterator end, Func&& func) noexcept {
     parallel_for_each_state* s = nullptr;
-    compat::optional<std::exception_ptr> ex;
     // Process all elements, giving each future the following treatment:
     //   - available, not failed: do nothing
     //   - available, failed: collect exception in ex
     //   - not available: collect in s (allocating it if needed)
     while (begin != end) {
         auto f = futurize_apply(std::forward<Func>(func), *begin++);
-        if (!f.available()) {
+        if (!f.available() || f.failed()) {
             if (!s) {
-                s = new parallel_for_each_state;
                 using itraits = std::iterator_traits<Iterator>;
-                s->reserve(internal::iterator_range_estimate_vector_capacity(begin, end, typename itraits::iterator_category()) + 1);
+                auto n = (internal::iterator_range_estimate_vector_capacity(begin, end, typename itraits::iterator_category()) + 1);
+                s = new parallel_for_each_state(n);
             }
             s->add_future(std::move(f));
-        } else {
-            if (f.failed()) {
-                ex = f.get_exception();
-            }
         }
     }
     // If any futures were not available, hand off to parallel_for_each_state::start().
     // Otherwise we can return a result immediately.
     if (s) {
-        if (ex) {
-            s->add_exception(std::move(*ex));
-        }
-        // s->start() takes ownership of s (and chains it to one of the futures it contains)
+        // s->get_future() takes ownership of s (and chains it to one of the futures it contains)
         // so this isn't a leak
-        s->start();
         return s->get_future();
-    } else {
-        if (__builtin_expect(bool(ex), false)) {
-            return make_exception_future<>(std::move(*ex));
-        }
-        return make_ready_future<>();
     }
+    return make_ready_future<>();
 }
 
 /// Run tasks in parallel (range version).
@@ -239,7 +180,9 @@ parallel_for_each(Iterator begin, Iterator end, Func&& func) noexcept {
 /// Given a \c range of objects, apply \c func to each object
 /// in the range, and return a future<> that resolves when all
 /// the functions complete.  \c func should return a future<> that indicates
-/// when it is complete.  All invocations are performed in parallel.
+/// when it is complete.  All invocations are performed in parallel. This allows
+/// the range to refer to stack objects, but means that unlike other loops this
+/// cannot check need_preempt and can only be used with small ranges.
 ///
 /// \param range A range of objects to iterate run \c func on
 /// \param func  A callable, accepting reference to the range's
@@ -280,13 +223,14 @@ public:
     }
     future<> get_future() { return _promise.get_future(); }
     virtual void run_and_dispose() noexcept override {
-        std::unique_ptr<repeater> zis{this};
         if (_state.failed()) {
             _promise.set_exception(std::move(_state).get_exception());
+            delete this;
             return;
         } else {
             if (std::get<0>(_state.get()) == stop_iteration::yes) {
                 _promise.set_value();
+                delete this;
                 return;
             }
             _state = {};
@@ -295,20 +239,22 @@ public:
             do {
                 auto f = futurator::apply(_action);
                 if (!f.available()) {
-                    internal::set_callback(f, std::move(zis));
+                    internal::set_callback(f, this);
                     return;
                 }
                 if (f.get0() == stop_iteration::yes) {
                     _promise.set_value();
+                    delete this;
                     return;
                 }
             } while (!need_preempt());
         } catch (...) {
             _promise.set_exception(std::current_exception());
+            delete this;
             return;
         }
         _state.set(stop_iteration::no);
-        schedule(std::move(zis));
+        schedule(this);
     }
 };
 
@@ -328,7 +274,7 @@ public:
 template<typename AsyncAction>
 GCC6_CONCEPT( requires seastar::ApplyReturns<AsyncAction, stop_iteration> || seastar::ApplyReturns<AsyncAction, future<stop_iteration>> )
 inline
-future<> repeat(AsyncAction action) {
+future<> repeat(AsyncAction action) noexcept {
     using futurator = futurize<std::result_of_t<AsyncAction()>>;
     static_assert(std::is_same<future<stop_iteration>, typename futurator::type>::value, "bad AsyncAction signature");
     try {
@@ -339,9 +285,9 @@ future<> repeat(AsyncAction action) {
             if (!f.available()) {
               return [&] () noexcept {
                 memory::disable_failure_guard dfg;
-                auto repeater = std::make_unique<internal::repeater<AsyncAction>>(std::move(action));
+                auto repeater = new internal::repeater<AsyncAction>(std::move(action));
                 auto ret = repeater->get_future();
-                internal::set_callback(f, std::move(repeater));
+                internal::set_callback(f, repeater);
                 return ret;
               }();
             }
@@ -351,9 +297,9 @@ future<> repeat(AsyncAction action) {
             }
         } while (!need_preempt());
 
-        auto repeater = std::make_unique<internal::repeater<AsyncAction>>(stop_iteration::no, std::move(action));
+        auto repeater = new internal::repeater<AsyncAction>(stop_iteration::no, std::move(action));
         auto ret = repeater->get_future();
-        schedule(std::move(repeater));
+        schedule(repeater);
         return ret;
     } catch (...) {
         return make_exception_future(std::current_exception());
@@ -397,14 +343,15 @@ public:
     }
     future<T> get_future() { return _promise.get_future(); }
     virtual void run_and_dispose() noexcept override {
-        std::unique_ptr<repeat_until_value_state> zis{this};
         if (this->_state.failed()) {
             _promise.set_exception(std::move(this->_state).get_exception());
+            delete this;
             return;
         } else {
             auto v = std::get<0>(std::move(this->_state).get());
             if (v) {
                 _promise.set_value(std::move(*v));
+                delete this;
                 return;
             }
             this->_state = {};
@@ -413,21 +360,23 @@ public:
             do {
                 auto f = futurator::apply(_action);
                 if (!f.available()) {
-                    internal::set_callback(f, std::move(zis));
+                    internal::set_callback(f, this);
                     return;
                 }
                 auto ret = f.get0();
                 if (ret) {
                     _promise.set_value(std::make_tuple(std::move(*ret)));
+                    delete this;
                     return;
                 }
             } while (!need_preempt());
         } catch (...) {
             _promise.set_exception(std::current_exception());
+            delete this;
             return;
         }
         this->_state.set(compat::nullopt);
-        schedule(std::move(zis));
+        schedule(this);
     }
 };
 
@@ -450,7 +399,7 @@ GCC6_CONCEPT( requires requires (AsyncAction aa) {
     futurize<std::result_of_t<AsyncAction()>>::apply(aa).get0().value();
 } )
 repeat_until_value_return_type<AsyncAction>
-repeat_until_value(AsyncAction action) {
+repeat_until_value(AsyncAction action) noexcept {
     using futurator = futurize<std::result_of_t<AsyncAction()>>;
     using type_helper = repeat_until_value_type_helper<typename futurator::type>;
     // the "T" in the documentation
@@ -462,9 +411,9 @@ repeat_until_value(AsyncAction action) {
         if (!f.available()) {
           return [&] () noexcept {
             memory::disable_failure_guard dfg;
-            auto state = std::make_unique<internal::repeat_until_value_state<AsyncAction, value_type>>(std::move(action));
+            auto state = new internal::repeat_until_value_state<AsyncAction, value_type>(std::move(action));
             auto ret = state->get_future();
-            internal::set_callback(f, std::move(state));
+            internal::set_callback(f, state);
             return ret;
           }();
         }
@@ -480,9 +429,9 @@ repeat_until_value(AsyncAction action) {
     } while (!need_preempt());
 
     try {
-        auto state = std::make_unique<internal::repeat_until_value_state<AsyncAction, value_type>>(compat::nullopt, std::move(action));
+        auto state = new internal::repeat_until_value_state<AsyncAction, value_type>(compat::nullopt, std::move(action));
         auto f = state->get_future();
-        schedule(std::move(state));
+        schedule(state);
         return f;
     } catch (...) {
         return make_exception_future<value_type>(std::current_exception());
@@ -500,10 +449,10 @@ public:
     explicit do_until_state(StopCondition stop, AsyncAction action) : _stop(std::move(stop)), _action(std::move(action)) {}
     future<> get_future() { return _promise.get_future(); }
     virtual void run_and_dispose() noexcept override {
-        std::unique_ptr<do_until_state> zis{this};
         if (_state.available()) {
             if (_state.failed()) {
                 _promise.set_urgent_state(std::move(_state));
+                delete this;
                 return;
             }
             _state = {}; // allow next cycle to overrun state
@@ -512,23 +461,26 @@ public:
             do {
                 if (_stop()) {
                     _promise.set_value();
+                    delete this;
                     return;
                 }
                 auto f = _action();
                 if (!f.available()) {
-                    internal::set_callback(f, std::move(zis));
+                    internal::set_callback(f, this);
                     return;
                 }
                 if (f.failed()) {
                     f.forward_to(std::move(_promise));
+                    delete this;
                     return;
                 }
             } while (!need_preempt());
         } catch (...) {
             _promise.set_exception(std::current_exception());
+            delete this;
             return;
         }
-        schedule(std::move(zis));
+        schedule(this);
     }
 };
 
@@ -547,7 +499,7 @@ public:
 template<typename AsyncAction, typename StopCondition>
 GCC6_CONCEPT( requires seastar::ApplyReturns<StopCondition, bool> && seastar::ApplyReturns<AsyncAction, future<>> )
 inline
-future<> do_until(StopCondition stop_cond, AsyncAction action) {
+future<> do_until(StopCondition stop_cond, AsyncAction action) noexcept {
     using namespace internal;
     using futurator = futurize<void>;
     do {
@@ -558,9 +510,9 @@ future<> do_until(StopCondition stop_cond, AsyncAction action) {
         if (!f.available()) {
           return [&] () noexcept {
             memory::disable_failure_guard dfg;
-            auto task = std::make_unique<do_until_state<StopCondition, AsyncAction>>(std::move(stop_cond), std::move(action));
+            auto task = new do_until_state<StopCondition, AsyncAction>(std::move(stop_cond), std::move(action));
             auto ret = task->get_future();
-            internal::set_callback(f, std::move(task));
+            internal::set_callback(f, task);
             return ret;
           }();
         }
@@ -569,9 +521,9 @@ future<> do_until(StopCondition stop_cond, AsyncAction action) {
         }
     } while (!need_preempt());
 
-    auto task = std::make_unique<do_until_state<StopCondition, AsyncAction>>(std::move(stop_cond), std::move(action));
+    auto task = new do_until_state<StopCondition, AsyncAction>(std::move(stop_cond), std::move(action));
     auto f = task->get_future();
-    schedule(std::move(task));
+    schedule(task);
     return f;
 }
 
@@ -593,6 +545,46 @@ future<> keep_doing(AsyncAction action) {
     });
 }
 
+namespace internal {
+template <typename Iterator, typename AsyncAction>
+class do_for_each_state final : public continuation_base<> {
+    Iterator _begin;
+    Iterator _end;
+    AsyncAction _action;
+    promise<> _pr;
+
+public:
+    do_for_each_state(Iterator begin, Iterator end, AsyncAction action, future<> first_unavailable)
+        : _begin(std::move(begin)), _end(std::move(end)), _action(std::move(action)) {
+        internal::set_callback(first_unavailable, this);
+    }
+    virtual void run_and_dispose() noexcept override {
+        std::unique_ptr<do_for_each_state> zis(this);
+        if (_state.failed()) {
+            _pr.set_urgent_state(std::move(_state));
+            return;
+        }
+        while (_begin != _end) {
+            auto f = futurize<void>::apply(_action, *_begin++);
+            if (f.failed()) {
+                f.forward_to(std::move(_pr));
+                return;
+            }
+            if (!f.available() || need_preempt()) {
+                _state = {};
+                internal::set_callback(f, this);
+                zis.release();
+                return;
+            }
+        }
+        _pr.set_value();
+    }
+    future<> get_future() {
+        return _pr.get_future();
+    }
+};
+}
+
 /// Call a function for each item in a range, sequentially (iterator version).
 ///
 /// For each item in a range, call a function, waiting for the previous
@@ -611,25 +603,18 @@ GCC6_CONCEPT( requires requires (Iterator i, AsyncAction aa) {
 } )
 inline
 future<> do_for_each(Iterator begin, Iterator end, AsyncAction action) {
-    if (begin == end) {
-        return make_ready_future<>();
-    }
-    while (true) {
-        auto f = futurize<void>::apply(action, *begin);
-        ++begin;
-        if (begin == end) {
-            return f;
-        }
-        if (!f.available() || need_preempt()) {
-            return std::move(f).then([action = std::move(action),
-                    begin = std::move(begin), end = std::move(end)] () mutable {
-                return do_for_each(std::move(begin), std::move(end), std::move(action));
-            });
-        }
+    while (begin != end) {
+        auto f = futurize<void>::apply(action, *begin++);
         if (f.failed()) {
             return f;
         }
+        if (!f.available() || need_preempt()) {
+            auto* s = new internal::do_for_each_state<Iterator, AsyncAction>{
+                std::move(begin), std::move(end), std::move(action), std::move(f)};
+            return s->get_future();
+        }
     }
+    return make_ready_future<>();
 }
 
 /// Call a function for each item in a range, sequentially (range version).
@@ -645,7 +630,7 @@ future<> do_for_each(Iterator begin, Iterator end, AsyncAction action) {
 ///         \c action failed.
 template<typename Container, typename AsyncAction>
 GCC6_CONCEPT( requires requires (Container c, AsyncAction aa) {
-    { futurize_apply(aa, *c.begin()) } -> future<>
+    { futurize_apply(aa, *c.begin()) } -> future<>;
 } )
 inline
 future<> do_for_each(Container& c, AsyncAction action) {
@@ -727,7 +712,7 @@ public:
 };
 
 template <typename Future>
-class when_all_state_component : public continuation_base_for_future_t<Future> {
+class when_all_state_component final : public continuation_base_for_future_t<Future> {
     when_all_state_base* _base;
     Future* _final_resting_place;
 public:
@@ -737,7 +722,7 @@ public:
             return true;
         } else {
             auto c = new (continuation) when_all_state_component(wasb, f);
-            set_callback(*f, std::unique_ptr<when_all_state_component>(c));
+            set_callback(*f, c);
             return false;
         }
     }

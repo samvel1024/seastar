@@ -15,46 +15,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Copyright (C) 2014 Cloudius Systems, Ltd.
+ * Copyright 2020 ScyllaDB
  */
 
 #pragma once
 
-#include <vector>
-
-#include <boost/test/unit_test.hpp>
-
-#include <seastar/core/future.hh>
-
-#include <seastar/testing/entry_point.hh>
+#include <seastar/util/std-compat.hh>
 
 namespace seastar {
 
-namespace testing {
+class logger;
 
-class seastar_test {
-public:
-    seastar_test();
-    virtual ~seastar_test() {}
-    virtual const char* get_test_file() = 0;
-    virtual const char* get_name() = 0;
-    virtual int get_expected_failures() { return 0; }
-    virtual future<> run_test_case() = 0;
-    void run();
-};
+/// Controls whether on_internal_error() aborts or throws. The default
+/// is to throw.
+void set_abort_on_internal_error(bool do_abort);
 
-const std::vector<seastar_test*>& known_tests();
-
+/// Report an internal error
+///
+/// Depending on the value passed to set_abort_on_internal_error, this
+/// will either log to \p logger and abort or throw a std::runtime_error.
+[[noreturn]] void on_internal_error(logger& logger, compat::string_view reason);
 }
-
-}
-
-#ifdef SEASTAR_TESTING_MAIN
-
-int main(int argc, char** argv) {
-    return seastar::testing::entry_point(argc, argv);
-}
-
-#endif // SEASTAR_TESTING_MAIN

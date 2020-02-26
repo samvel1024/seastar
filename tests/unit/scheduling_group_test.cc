@@ -77,7 +77,7 @@ SEASTAR_THREAD_TEST_CASE(sg_specific_values_define_after_sg_create) {
             int factor = engine().cpu_id() + 1;
             int expected_sum = ((1 + num_scheduling_groups)*num_scheduling_groups) * factor /2;
             BOOST_REQUIRE_EQUAL(expected_sum, sum);
-        }). then([key1, key2] {
+        }). then([key2] {
             auto ivec_to_int = [] (ivec& v) {
                 return v.size() ? v[0] : 0;
             };
@@ -135,7 +135,7 @@ SEASTAR_THREAD_TEST_CASE(sg_specific_values_define_before_sg_create) {
             int factor = engine().cpu_id() + 1;
             int expected_sum = ((1 + num_scheduling_groups)*num_scheduling_groups) * factor /2;
             BOOST_REQUIRE_EQUAL(expected_sum, sum);
-        }). then([key1, key2] {
+        }). then([key2] {
             auto ivec_to_int = [] (ivec& v) {
                 return v.size() ? v[0] : 0;
             };
@@ -197,7 +197,7 @@ SEASTAR_THREAD_TEST_CASE(sg_specific_values_define_before_and_after_sg_create) {
             int factor = engine().cpu_id() + 1;
             int expected_sum = ((1 + num_scheduling_groups)*num_scheduling_groups) * factor /2;
             BOOST_REQUIRE_EQUAL(expected_sum, sum);
-        }). then([key1, key2] {
+        }). then([key2] {
             auto ivec_to_int = [] (ivec& v) {
                 return v.size() ? v[0] : 0;
             };
@@ -209,5 +209,27 @@ SEASTAR_THREAD_TEST_CASE(sg_specific_values_define_before_and_after_sg_create) {
             });
 
         });
+    }).get();
+}
+
+/*
+ * Test that current scheduling group is inherited by seastar::async()
+ */
+SEASTAR_THREAD_TEST_CASE(sg_scheduling_group_inheritance_in_seastar_async_test) {
+    scheduling_group sg = create_scheduling_group("sg0", 100).get0();
+    thread_attributes attr = {};
+    attr.sched_group = sg;
+    seastar::async(attr, [attr] {
+        BOOST_REQUIRE_EQUAL(internal::scheduling_group_index(current_scheduling_group()),
+                                internal::scheduling_group_index(*(attr.sched_group)));
+
+        seastar::async([attr] {
+            BOOST_REQUIRE_EQUAL(internal::scheduling_group_index(current_scheduling_group()),
+                                internal::scheduling_group_index(*(attr.sched_group)));
+
+            smp::invoke_on_all([sched_group_idx = internal::scheduling_group_index(*(attr.sched_group))] () {
+                BOOST_REQUIRE_EQUAL(internal::scheduling_group_index(current_scheduling_group()), sched_group_idx);
+            }).get();
+        }).get();
     }).get();
 }

@@ -157,7 +157,8 @@ namespace memory {
 
 seastar::logger seastar_memory_logger("seastar_memory");
 
-static allocation_site_ptr get_allocation_site() __attribute__((unused));
+[[gnu::unused]]
+static allocation_site_ptr get_allocation_site();
 
 static void on_allocation_failure(size_t size);
 
@@ -458,6 +459,8 @@ static thread_local cpu_pages cpu_mem;
 std::atomic<unsigned> cpu_pages::cpu_id_gen;
 cpu_pages* cpu_pages::all_cpus[max_cpus];
 
+#ifdef SEASTAR_HEAPPROF
+
 void set_heap_profiling_enabled(bool enable) {
     bool is_enabled = cpu_mem.collect_backtrace;
     if (enable) {
@@ -471,6 +474,35 @@ void set_heap_profiling_enabled(bool enable) {
     }
     cpu_mem.collect_backtrace = enable;
 }
+
+static thread_local int64_t scoped_heap_profiling_embed_count = 0;
+
+scoped_heap_profiling::scoped_heap_profiling() noexcept {
+    ++scoped_heap_profiling_embed_count;
+    set_heap_profiling_enabled(true);
+}
+
+scoped_heap_profiling::~scoped_heap_profiling() {
+    if (!--scoped_heap_profiling_embed_count) {
+        set_heap_profiling_enabled(false);
+    }
+}
+
+#else
+
+void set_heap_profiling_enabled(bool enable) {
+    seastar_logger.warn("Seastar compiled without heap profiling support, heap profiler not supported;"
+            " compile with the Seastar_HEAP_PROFILING=ON CMake option to add heap profiling support");
+}
+
+scoped_heap_profiling::scoped_heap_profiling() noexcept {
+    set_heap_profiling_enabled(true); // let it print the warning
+}
+
+scoped_heap_profiling::~scoped_heap_profiling() {
+}
+
+#endif
 
 // Smallest index i such that all spans stored in the index are >= pages.
 static inline
@@ -1829,6 +1861,13 @@ namespace memory {
 
 void set_heap_profiling_enabled(bool enabled) {
     seastar_logger.warn("Seastar compiled with default allocator, heap profiler not supported");
+}
+
+scoped_heap_profiling::scoped_heap_profiling() noexcept {
+    set_heap_profiling_enabled(true); // let it print the warning
+}
+
+scoped_heap_profiling::~scoped_heap_profiling() {
 }
 
 void enable_abort_on_allocation_failure() {
